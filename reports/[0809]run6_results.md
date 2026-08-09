@@ -48,6 +48,33 @@ run6_1(`R≈0.10`), run6_2(`R≈0.30`) 순.
 가장 두드러지는 차이는 머리카락 색 채도/명도(특히 CM_1084)이며, 이는 §3.3의 색 지표
 변화와 방향이 같음.
 
+### 1.2 seed별 비교
+
+epoch 15 고정, 같은 이미지를 seed `{1, 2, 3, 42}`로 생성한 결과임. 한 행이 하나의 run이므로
+**행 내부에서 seed끼리 얼마나 흔들리는지**가 §2의 seed 불일치에 대응함. 행 라벨의 값은
+§2-2의 해당 이미지 seed 불일치[deg]임. §1.1과 같은 이유로 CM_1033(유일한 개선 사례)과
+CM_1084(가장 큰 악화 사례)를 골랐음.
+
+#### CM_1033
+
+| run | seed 1 | seed 2 | seed 3 | seed 42 |
+|---|---|---|---|---|
+| run5_1 (14.17°) | ![run5_1 s1](../outputs/0806/run5_1/1/epoch15/CM_1033.png) | ![run5_1 s2](../outputs/0806/run5_1/2/epoch15/CM_1033.png) | ![run5_1 s3](../outputs/0806/run5_1/3/epoch15/CM_1033.png) | ![run5_1 s42](../outputs/0806/run5_1/42/epoch15/CM_1033.png) |
+| run6_1 (15.25°) | ![run6_1 s1](../outputs/0807/run6_1/1/epoch15/CM_1033.png) | ![run6_1 s2](../outputs/0807/run6_1/2/epoch15/CM_1033.png) | ![run6_1 s3](../outputs/0807/run6_1/3/epoch15/CM_1033.png) | ![run6_1 s42](../outputs/0807/run6_1/42/epoch15/CM_1033.png) |
+| run6_2 (13.45°) | ![run6_2 s1](../outputs/0807/run6_2/1/epoch15/CM_1033.png) | ![run6_2 s2](../outputs/0807/run6_2/2/epoch15/CM_1033.png) | ![run6_2 s3](../outputs/0807/run6_2/3/epoch15/CM_1033.png) | ![run6_2 s42](../outputs/0807/run6_2/42/epoch15/CM_1033.png) |
+
+#### CM_1084
+
+| run | seed 1 | seed 2 | seed 3 | seed 42 |
+|---|---|---|---|---|
+| run5_1 (17.43°) | ![run5_1 s1](../outputs/0806/run5_1/1/epoch15/CM_1084.png) | ![run5_1 s2](../outputs/0806/run5_1/2/epoch15/CM_1084.png) | ![run5_1 s3](../outputs/0806/run5_1/3/epoch15/CM_1084.png) | ![run5_1 s42](../outputs/0806/run5_1/42/epoch15/CM_1084.png) |
+| run6_1 (22.10°) | ![run6_1 s1](../outputs/0807/run6_1/1/epoch15/CM_1084.png) | ![run6_1 s2](../outputs/0807/run6_1/2/epoch15/CM_1084.png) | ![run6_1 s3](../outputs/0807/run6_1/3/epoch15/CM_1084.png) | ![run6_1 s42](../outputs/0807/run6_1/42/epoch15/CM_1084.png) |
+| run6_2 (19.65°) | ![run6_2 s1](../outputs/0807/run6_2/1/epoch15/CM_1084.png) | ![run6_2 s2](../outputs/0807/run6_2/2/epoch15/CM_1084.png) | ![run6_2 s3](../outputs/0807/run6_2/3/epoch15/CM_1084.png) | ![run6_2 s42](../outputs/0807/run6_2/42/epoch15/CM_1084.png) |
+
+※ seed 간 차이 중 육안으로 가장 먼저 보이는 것은 모발 색상이지만, seed 불일치는 hair matte
+내부의 structure tensor 방향만 coherence 가중으로 측정한 값이므로 색 변화는 지표에 반영되지
+않음(`[0806]run5_test_results.md` §1.2와 동일 주의).
+
 ## 2. 방향 오차 / 시드 불일치 평가
 
 `[0803]seed_test.md` §5 방법론, `data/test` 8장 × seed `{1,2,3,42}`, `sigma_i=3`,
