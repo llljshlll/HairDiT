@@ -33,27 +33,27 @@
 
 ## 1. 결과 이미지 비교
 
-epoch 15 · seed 42, `data/test` 중 5장에 대한 비교. 좌측부터 입력 스케치, run5_1(기준),
-run6_1(`R≈0.10`), run6_2(`R≈0.30`) 순.
+epoch 15 · seed 42, `[0806]run5_test_results.md`와 동일한 5장(CM_1027 / CM_1067 / CM_1082 /
+CM_1033 / CM_1068)에 대한 비교. 좌측부터 입력 스케치, run5_1(기준), run6_1(`R≈0.10`),
+run6_2(`R≈0.30`) 순.
 
 | image | 스케치 | run5_1 | run6_1 | run6_2 |
 |---|---|---|---|---|
-| CM_1033 (유일하게 개선된 이미지) | ![sketch CM_1033](../data/test/recolor_sketch/CM_1033.png) | ![run5_1 CM_1033](../outputs/0806/run5_1/42/epoch15/CM_1033.png) | ![run6_1 CM_1033](../outputs/0807/run6_1/42/epoch15/CM_1033.png) | ![run6_2 CM_1033](../outputs/0807/run6_2/42/epoch15/CM_1033.png) |
-| CM_1084 (가장 크게 악화된 이미지) | ![sketch CM_1084](../data/test/recolor_sketch/CM_1084.png) | ![run5_1 CM_1084](../outputs/0806/run5_1/42/epoch15/CM_1084.png) | ![run6_1 CM_1084](../outputs/0807/run6_1/42/epoch15/CM_1084.png) | ![run6_2 CM_1084](../outputs/0807/run6_2/42/epoch15/CM_1084.png) |
-| CM_1068 | ![sketch CM_1068](../data/test/recolor_sketch/CM_1068.png) | ![run5_1 CM_1068](../outputs/0806/run5_1/42/epoch15/CM_1068.png) | ![run6_1 CM_1068](../outputs/0807/run6_1/42/epoch15/CM_1068.png) | ![run6_2 CM_1068](../outputs/0807/run6_2/42/epoch15/CM_1068.png) |
+| CM_1027 | ![sketch CM_1027](../data/test/recolor_sketch/CM_1027.png) | ![run5_1 CM_1027](../outputs/0806/run5_1/42/epoch15/CM_1027.png) | ![run6_1 CM_1027](../outputs/0807/run6_1/42/epoch15/CM_1027.png) | ![run6_2 CM_1027](../outputs/0807/run6_2/42/epoch15/CM_1027.png) |
+| CM_1067 | ![sketch CM_1067](../data/test/recolor_sketch/CM_1067.png) | ![run5_1 CM_1067](../outputs/0806/run5_1/42/epoch15/CM_1067.png) | ![run6_1 CM_1067](../outputs/0807/run6_1/42/epoch15/CM_1067.png) | ![run6_2 CM_1067](../outputs/0807/run6_2/42/epoch15/CM_1067.png) |
 | CM_1082 | ![sketch CM_1082](../data/test/recolor_sketch/CM_1082.png) | ![run5_1 CM_1082](../outputs/0806/run5_1/42/epoch15/CM_1082.png) | ![run6_1 CM_1082](../outputs/0807/run6_1/42/epoch15/CM_1082.png) | ![run6_2 CM_1082](../outputs/0807/run6_2/42/epoch15/CM_1082.png) |
-| CM_1172 | ![sketch CM_1172](../data/test/recolor_sketch/CM_1172.png) | ![run5_1 CM_1172](../outputs/0806/run5_1/42/epoch15/CM_1172.png) | ![run6_1 CM_1172](../outputs/0807/run6_1/42/epoch15/CM_1172.png) | ![run6_2 CM_1172](../outputs/0807/run6_2/42/epoch15/CM_1172.png) |
+| CM_1033 (유일하게 개선된 이미지) | ![sketch CM_1033](../data/test/recolor_sketch/CM_1033.png) | ![run5_1 CM_1033](../outputs/0806/run5_1/42/epoch15/CM_1033.png) | ![run6_1 CM_1033](../outputs/0807/run6_1/42/epoch15/CM_1033.png) | ![run6_2 CM_1033](../outputs/0807/run6_2/42/epoch15/CM_1033.png) |
+| CM_1068 | ![sketch CM_1068](../data/test/recolor_sketch/CM_1068.png) | ![run5_1 CM_1068](../outputs/0806/run5_1/42/epoch15/CM_1068.png) | ![run6_1 CM_1068](../outputs/0807/run6_1/42/epoch15/CM_1068.png) | ![run6_2 CM_1068](../outputs/0807/run6_2/42/epoch15/CM_1068.png) |
 
 ※ 정성적으로는 frizz·고주파 곱슬 아티팩트가 세 run 어디에도 뚜렷이 보이지 않음. 육안상
-가장 두드러지는 차이는 머리카락 색 채도/명도(특히 CM_1084)이며, 이는 §3.3의 색 지표
-변화와 방향이 같음.
+가장 두드러지는 차이는 머리카락 색 채도/명도이며, 이는 §3.3의 색 지표 변화와 방향이 같음.
 
 ### 1.2 seed별 비교
 
 epoch 15 고정, 같은 이미지를 seed `{1, 2, 3, 42}`로 생성한 결과임. 한 행이 하나의 run이므로
 **행 내부에서 seed끼리 얼마나 흔들리는지**가 §2의 seed 불일치에 대응함. 행 라벨의 값은
-§2-2의 해당 이미지 seed 불일치[deg]임. §1.1과 같은 이유로 CM_1033(유일한 개선 사례)과
-CM_1084(가장 큰 악화 사례)를 골랐음.
+§2-2의 해당 이미지 seed 불일치[deg]임. §1.1의 5장 중 `run5_1 → run6_2` 개선폭과
+`run5_1 → run6_1` 악화폭이 함께 큰 두 사례(CM_1033, CM_1027)를 골랐음.
 
 #### CM_1033
 
@@ -63,13 +63,13 @@ CM_1084(가장 큰 악화 사례)를 골랐음.
 | run6_1 (15.25°) | ![run6_1 s1](../outputs/0807/run6_1/1/epoch15/CM_1033.png) | ![run6_1 s2](../outputs/0807/run6_1/2/epoch15/CM_1033.png) | ![run6_1 s3](../outputs/0807/run6_1/3/epoch15/CM_1033.png) | ![run6_1 s42](../outputs/0807/run6_1/42/epoch15/CM_1033.png) |
 | run6_2 (13.45°) | ![run6_2 s1](../outputs/0807/run6_2/1/epoch15/CM_1033.png) | ![run6_2 s2](../outputs/0807/run6_2/2/epoch15/CM_1033.png) | ![run6_2 s3](../outputs/0807/run6_2/3/epoch15/CM_1033.png) | ![run6_2 s42](../outputs/0807/run6_2/42/epoch15/CM_1033.png) |
 
-#### CM_1084
+#### CM_1027
 
 | run | seed 1 | seed 2 | seed 3 | seed 42 |
 |---|---|---|---|---|
-| run5_1 (17.43°) | ![run5_1 s1](../outputs/0806/run5_1/1/epoch15/CM_1084.png) | ![run5_1 s2](../outputs/0806/run5_1/2/epoch15/CM_1084.png) | ![run5_1 s3](../outputs/0806/run5_1/3/epoch15/CM_1084.png) | ![run5_1 s42](../outputs/0806/run5_1/42/epoch15/CM_1084.png) |
-| run6_1 (22.10°) | ![run6_1 s1](../outputs/0807/run6_1/1/epoch15/CM_1084.png) | ![run6_1 s2](../outputs/0807/run6_1/2/epoch15/CM_1084.png) | ![run6_1 s3](../outputs/0807/run6_1/3/epoch15/CM_1084.png) | ![run6_1 s42](../outputs/0807/run6_1/42/epoch15/CM_1084.png) |
-| run6_2 (19.65°) | ![run6_2 s1](../outputs/0807/run6_2/1/epoch15/CM_1084.png) | ![run6_2 s2](../outputs/0807/run6_2/2/epoch15/CM_1084.png) | ![run6_2 s3](../outputs/0807/run6_2/3/epoch15/CM_1084.png) | ![run6_2 s42](../outputs/0807/run6_2/42/epoch15/CM_1084.png) |
+| run5_1 (14.14°) | ![run5_1 s1](../outputs/0806/run5_1/1/epoch15/CM_1027.png) | ![run5_1 s2](../outputs/0806/run5_1/2/epoch15/CM_1027.png) | ![run5_1 s3](../outputs/0806/run5_1/3/epoch15/CM_1027.png) | ![run5_1 s42](../outputs/0806/run5_1/42/epoch15/CM_1027.png) |
+| run6_1 (17.34°) | ![run6_1 s1](../outputs/0807/run6_1/1/epoch15/CM_1027.png) | ![run6_1 s2](../outputs/0807/run6_1/2/epoch15/CM_1027.png) | ![run6_1 s3](../outputs/0807/run6_1/3/epoch15/CM_1027.png) | ![run6_1 s42](../outputs/0807/run6_1/42/epoch15/CM_1027.png) |
+| run6_2 (16.22°) | ![run6_2 s1](../outputs/0807/run6_2/1/epoch15/CM_1027.png) | ![run6_2 s2](../outputs/0807/run6_2/2/epoch15/CM_1027.png) | ![run6_2 s3](../outputs/0807/run6_2/3/epoch15/CM_1027.png) | ![run6_2 s42](../outputs/0807/run6_2/42/epoch15/CM_1027.png) |
 
 ※ seed 간 차이 중 육안으로 가장 먼저 보이는 것은 모발 색상이지만, seed 불일치는 hair matte
 내부의 structure tensor 방향만 coherence 가중으로 측정한 값이므로 색 변화는 지표에 반영되지
@@ -182,9 +182,9 @@ run5_1 epoch15 실측치가 없어 정량적 확정은 아님.
 frizz 지점 `R≈1.016`까지 3.4배 거리). §1의 5장(seed 42, epoch15) 육안 검토 결과:
 
 - 고주파 곱슬거림(run3에서 관찰된 frizz 특징)은 run6_1·run6_2 어디에서도 뚜렷하지 않음.
-- 가장 눈에 띄는 차이는 색상 채도/명도(CM_1084에서 `w`가 클수록 어둡고 채도가 낮아짐)이며,
-  이는 §3.3의 `dE_unbraid` 악화와 방향이 같음 — frizz가 아니라 색 재현 저하 쪽으로 손상이
-  나타난 것으로 보임.
+- 가장 눈에 띄는 차이는 머리카락 색조/채도임(예: CM_1027, `w`가 클수록 톤이 옅어지고 채도가
+  낮아짐). 이는 §3.3의 `dE_unbraid` 악화와 방향이 같음 — frizz가 아니라 색 재현 저하 쪽으로
+  손상이 나타난 것으로 보임.
 - 다만 5장만 육안 검토했고 정량 frizz 지표는 없음(`[0806]` §3.3-e 한계 ③과 동일한 gap).
 
 ## 4. 한계
