@@ -164,6 +164,16 @@ frizz 지점 `R≈1.016`까지 3.4배 거리). §1의 5장(seed 42, epoch15) 육
  낮아짐). 이는 §3.3의 `dE_unbraid` 악화와 방향이 같음 — frizz가 아니라 색 재현 저하 쪽으로
  손상이 나타난 것으로 보임.
 
+같은 seed(42)·같은 epoch(15)로 맞춘 run3 대조:
+
+| image | run3 | run6_1 | run6_2 |
+|---|---|---|---|
+| CM_1027 | ![run3 CM_1027](../outputs/0725_phase1/epoch15/seed42/unbraid_new/gt_sketch/CM_1027.png) | ![run6_1 CM_1027](../outputs/0807/run6_1/42/epoch15/CM_1027.png) | ![run6_2 CM_1027](../outputs/0807/run6_2/42/epoch15/CM_1027.png) |
+| CM_1067 | ![run3 CM_1067](../outputs/0725_phase1/epoch15/seed42/paper/sketch_gt/CM_1067.png) | ![run6_1 CM_1067](../outputs/0807/run6_1/42/epoch15/CM_1067.png) | ![run6_2 CM_1067](../outputs/0807/run6_2/42/epoch15/CM_1067.png) |
+| CM_1082 | ![run3 CM_1082](../outputs/0725_phase1/epoch15/seed42/paper/sketch_gt/CM_1082.png) | ![run6_1 CM_1082](../outputs/0807/run6_1/42/epoch15/CM_1082.png) | ![run6_2 CM_1082](../outputs/0807/run6_2/42/epoch15/CM_1082.png) |
+| CM_1033 | ![run3 CM_1033](../outputs/0725_phase1/epoch15/seed42/unbraid_new/gt_sketch/CM_1033%20%281%29.png) | ![run6_1 CM_1033](../outputs/0807/run6_1/42/epoch15/CM_1033.png) | ![run6_2 CM_1033](../outputs/0807/run6_2/42/epoch15/CM_1033.png) |
+| CM_1068 | ![run3 CM_1068](../outputs/0725_phase1/epoch15/seed42/paper/sketch_gt/CM_1068.png) | ![run6_1 CM_1068](../outputs/0807/run6_1/42/epoch15/CM_1068.png) | ![run6_2 CM_1068](../outputs/0807/run6_2/42/epoch15/CM_1068.png) |
+
 ## 4. 한계
 - **조건당 학습 반복 없음(`n=1`)** — `w_lpips` 값마다 학습을 1회씩만 돌림. §3.2의 비단조
   패턴(`run5_1 < run6_2 < run6_1`)이 8/8 이미지에서 일관되긴 하나, 반복 없이는 이게 `w`의
