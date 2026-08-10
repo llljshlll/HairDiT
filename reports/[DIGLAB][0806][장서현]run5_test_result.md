@@ -1,4 +1,23 @@
+# run5 result
 
+## 최상단 요약 (10줄 이내)
+
+**지난 미팅 (2026-08-06, `[0805]results.md` 보고 후 교수님 피드백)** — 키워드 3줄
+- 모델 아키텍처는 그대로 유지
+- densify 끄고 noise-gate만 적용한 조건(run5_1)을 진행
+- densify 켜고 기존 step-warmup(에포크 기준 30%)을 적용한 조건(run5_2)을 진행
+
+**합의 사항 → 상태**
+- [완료] densify OFF + noise-gate 조건(run5_1) 학습 및 방향·색 지표 측정
+- [완료] densify ON + 기존 step-warmup 조건(run5_2) 학습 및 방향·색 지표 측정
+- [완료] densify·LPIPS 게이트 두 변수를 분리해 개별 효과 확인(§3.1, §3.2)
+
+**이번 결과 / 막힌 것 / 다음**
+- 결과: run5_2(densify)는 방향 오차·coherence·seed 불일치 모두 저하, run5_1(noise-gate만)은 오히려 개선 — 노이즈·엉킴 문제는 densify와 강하게 연관되고 noise-gate 탓이 아님
+- 막힌 것: LPIPS 최적 세기 미확정 — 지금까지 `R≈0.02`, `R≈1.0` 두 점뿐이고 그 사이 구간은 게이트 도입 후 한 번도 평가되지 않음
+- 다음: 게이트 고정한 채 세기만 두 값(`R≈0.10`, `R≈0.30`)으로 스윕(§3.3-e)
+
+## 0. 실험 구성
 
 | Run | Densify | LPIPS 활성 방식 | run4 대비 변경점 | 실험 목적 |
 |---|---|---|---|---|
@@ -8,19 +27,6 @@
 | **run5_2** | ON | Step-warmup (기존 방식, epoch 기준 30%) | Densify만 변경 | Densify 효과 분리 |
 
 ※ 네 run 모두 모델 아키텍처와 그 외 학습 조건은 동일하게 유지했으며, run5_1/run5_2는 run4와 동일한 조건에서 한 변수씩 분리해 비교하기 위한 실험임.
-
-## 요약
-
-1. `run5_2`의 densify 조건은 방향 오차·coherence·seed 불일치 모두에서 열화됨.
-2. `run5_1` 조건은 방향 지표상 run4보다 개선됨. 다만 게이트 위치와 누적 LPIPS 노출량(5배)이
-   함께 바뀐 것이므로, 개선을 게이트 위치 단독 효과로 귀속할 수 없음.
-3. 따라서 run5의 노이즈·머릿결 엉킴은 noise-gate보다 densification과 더 강하게 연관됨.
-   두 변수는 가법적이지 않고, densify의 손상은 LPIPS 노출이 늘어난 조건에서 약 2배로 커짐.
-4. LPIPS 노출 증가는 seed 불일치를 일부 완화하지만(run4→run5_1: 15.80→14.09°),
-   sparse stroke 사이 방향을 초기 noise와 모델 prior가 정하는 근본 메커니즘
-   (`[0803]seed_test.md` §6)까지 해소한다는 근거는 없음.
-5. LPIPS의 최적 가중치도 미확정이며, 지금까지 밟아본 실효 세기는 `R≈0.02`와 `R≈1.0` 두 점뿐임.
-   그 사이 구간은 게이트 도입 이후 한 번도 평가되지 않음(§3.3-c).
 
 ## 1. 결과 이미지 비교
 
@@ -76,9 +82,9 @@ matte 내부의 structure tensor **방향**만 coherence 가중으로 측정한 
 
 
 
-## 2. 방향 오차 / 시드 불일치 평가 ([0803]seed_test.md §5 방법론)
+## 2. 방향 오차 / 시드 불일치 평가 ([DIGLAB][0803][장서현]seed_test.md §5 방법론)
 
-`[0803]seed_test.md` §5의 structure tensor 지표를 그대로 적용함. 평가 대상은
+`[DIGLAB][0803][장서현]seed_test.md` §5의 structure tensor 지표를 그대로 적용함. 평가 대상은
 `data/test` 8장 × seed `{1, 2, 3, 42}`이며, `sigma_i=3`, `erode_px=6`을 사용함.
 
 - **GT 오차**: 생성 이미지와 GT 원본의 평균 방향 오차(도)
@@ -119,15 +125,15 @@ matte 내부의 structure tensor **방향**만 coherence 가중으로 측정한 
 ### 2-3. 해석
 
 - epoch15 기준 `run5_1`은 run4보다 GT 오차가 **19.29 → 18.10°**, seed 불일치가
-  **15.80 → 14.09°**로 모두 낮고, coherence도 **0.761 → 0.770**으로 높음. 따라서
-  densify를 끈 상태에서 noise-gate를 적용한 run5_1은 방향 안정성 측면에서 오히려 안정됨
+ **15.80 → 14.09°**로 모두 낮고, coherence도 **0.761 → 0.770**으로 높음. 따라서
+ densify를 끈 상태에서 noise-gate를 적용한 run5_1은 방향 안정성 측면에서 오히려 안정됨
 - `run5_2`는 run4 대비 epoch15에서 GT 오차가 **19.29 → 20.57°**, coherence가
-  **0.761 → 0.724**, seed 불일치가 **15.80 → 17.98°**로 악화됨.
-- 따라서 이번 8장·4 seed 평가에서는 **run5_2의 열화가 densify 축에서 재현**됨. 반면
-  run5_1은 run4보다 오히려 개선되어, run5에서 관찰된 방향 불안정성을 noise-gate 단독
-  효과로 설명하기 어려움.
+ **0.761 → 0.724**, seed 불일치가 **15.80 → 17.98°**로 악화됨.
+- 따라서 이번 8장·4 seed 평가에서는 **run5_2의 저하가 densify 축에서 재현**됨. 반면
+ run5_1은 run4보다 오히려 개선되어, run5에서 관찰된 방향 불안정성을 noise-gate 단독
+ 효과로 설명하기 어려움.
 - 단, 표본은 8장이고 seed 불일치는 상대 지표이므로, 이를 모든 입력에 대한 절대적 인과
-  증명으로 해석하지 않고 이번 평가 범위의 ablation 결과로 해석함.
+ 증명으로 해석하지 않고 이번 평가 범위의 ablation 결과로 해석함.
 
 
 ## 3. 분석
@@ -138,13 +144,13 @@ matte 내부의 structure tensor **방향**만 coherence 가중으로 측정한 
 두 변수를 분리할 수 있음.
 
 ```text
-run5_2 − run4:   GT 방향 오차  19.29 → 20.57°  (+1.28)
-                 coherence      0.761 → 0.724   (−0.037)
-                 seed 불일치   15.80 → 17.98°  (+2.18)
+run5_2 − run4:  GT 방향 오차 19.29 → 20.57° (+1.28)
+         coherence   0.761 → 0.724  (−0.037)
+         seed 불일치  15.80 → 17.98° (+2.18)
 ```
 
 8개 이미지 모두 같은 방향이고, densify를 끈 `run5_1`은 반대로 개선됨. 따라서 run5의 방향
-불안정성과 coherence 저하를 noise-gate 단독으로 설명하기 어렵고, **DensifyAug가 주된 열화
+불안정성과 coherence 저하를 noise-gate 단독으로 설명하기 어렵고, **DensifyAug가 주된 저하
 요인**으로 판단함.
 
 가능한 메커니즘은 densification이 원본 stroke 사이 빈 공간에 보간 stroke를 넣으면서
@@ -154,7 +160,7 @@ annotation에 없던 영역의 방향까지 조건으로 학습시킨다는 것�
 ### 3.2 Noise-gate의 영향 — 개선은 사실이나 "게이트 위치" 효과가 아님
 
 epoch15에서 `run5_1`은 GT 오차 19.29→18.10°, seed 불일치 15.80→14.09°, coherence
-0.761→0.770으로 세 지표 모두 개선됨. **noise-gate가 방향성 열화를 유발하지 않았음**이
+0.761→0.770으로 세 지표 모두 개선됨. **noise-gate가 방향성 저하를 유발하지 않았음**이
 §2가 직접 지지하는 진술임.
 
 다만 게이트를 바꾸면 적용 위치와 **누적 투여량이 함께** 바뀜 — `run5_1`은 `run4`의 5배
@@ -163,10 +169,10 @@ LPIPS 노출을 받았음(§3.3-a). `w_lpips` 값이 같다고 "위치만 바뀌
 2×2를 교호작용까지 분해하면:
 
 ```text
-게이트 효과:   densify OFF   run5_1 − run4   = −1.19°   (개선)
-               densify ON    run5   − run5_2 = +0.26°   (소멸)
-densify 효과:  warmup        run5_2 − run4   = +1.28°
-               noise-gate    run5   − run5_1 = +2.73°   (2배)
+게이트 효과:  densify OFF  run5_1 − run4  = −1.19°  (개선)
+        densify ON  run5  − run5_2 = +0.26°  (소멸)
+densify 효과: warmup    run5_2 − run4  = +1.28°
+        noise-gate  run5  − run5_1 = +2.73°  (2배)
 ```
 
 두 변수는 가법적이지 않고, LPIPS 노출 증가가 densified sketch의 악영향까지 증폭함. 정확한
@@ -176,7 +182,7 @@ densify 효과:  warmup        run5_2 − run4   = +1.28°
 ### 3.3 LPIPS 영향에 대한 해석상의 주의
 
 LPIPS는 방향성을 직접 최적화하는 손실이 아니라 복원 이미지의 perceptual feature를 제한할
-뿐이므로, 방향 지표의 변화는 간접적 결과임. 또한 `run5`는 2변수 동시 변경이라 그 열화만으로
+뿐이므로, 방향 지표의 변화는 간접적 결과임. 또한 `run5`는 2변수 동시 변경이라 그 저하만으로
 게이트를 판단할 수 없음 — 이번 2×2에서 게이트 축은 `run4→run5_1`, densify 축은
 `run4→run5_2`임.
 
@@ -245,10 +251,10 @@ noise-gate는 이 중 σ가 낮은(0.7 이하) 이미지만 골라 계산하는�
 
 | run | `R` | `w_lpips` | 관측 |
 |---|---:|---:|---|
-| run3 | 1.016 | 0.1 | frizz(머리카락이 뻣뻣하고 고주파로 곱슬거리는 아티팩트). LPIPS 활성 epoch에서 flow loss 반등(`[0730]results.md` §3-2) |
+| run3 | 1.016 | 0.1 | frizz(머리카락이 뻣뻣하고 고주파로 곱슬거리는 아티팩트). LPIPS 활성 epoch에서 flow loss 반등(`[DIGLAB][0730][장서현]results.md` §3-2) |
 | run4 / 0730 | ~0.022 | 0.002 | frizz 소멸, 대신 가닥 뭉개짐·방향 흐트러짐(blur) |
 
-`[0729]retrain_plan_v2.md` §2-2가 중간 구간(`R=0.2~0.5`)을 선택지 ②로 적어두고 "재현 성공 후
+`[DIGLAB][0729][장서현]retrain_plan_v2.md` §2-2가 중간 구간(`R=0.2~0.5`)을 선택지 ②로 적어두고 "재현 성공 후
 이분탐색"으로 미뤘으나 **실행되지 않았고, 50배 간격이 그대로 비어 있음.**
 
 
@@ -261,7 +267,7 @@ diffusion + x-prediction**이라 LPIPS 그래디언트가 출력에 직행함. �
 v-prediction이라 `(−σ) × VAE decoder Jacobian`을 경유하고 matte 마스킹(`losses.py:107-108`,
 머리를 검은 배경에 오려붙여 VGG에 투입)까지 붙음. 분모도 pixel L2 vs
 latent L2/`s≈37`(`losses.py:272-274`)로 다름. 실제로 `λ1=0.1`을 그대로 넣었을 때 우리 실측
-`R`은 **1.016**이었음(`[0729]retrain_plan_v2.md` §0) — 저쪽 보조항이 우리에겐 flow와 동급이
+`R`은 **1.016**이었음(`[DIGLAB][0729][장서현]retrain_plan_v2.md` §0) — 저쪽 보조항이 우리에겐 flow와 동급이
 됨. 게다가 그 값은 P-DINO·REPA가 함께 있는 3항 목적함수에서 튜닝됐음(Table 5b~5d).
 threshold도 `timeshift=1.0` 전제라, `shift=3.0`인 우리에게 `σ≤0.7`은 스케줄 기준 마지막
 **43.75%**(샘플 40%)이지 PixelGen의 70%가 아님.
@@ -290,11 +296,11 @@ latent diffusion + VAE decoder 경유 + ε/v/flow 전부에서 검증, `w_LPL≈
 | **run6_2** | ~0.30 | **0.022** | `[0729]` ②구간, LPL "1/5 기여"에 근접 |
 
 - 두 run 모두 densify OFF + noise-gate 유지(run5_1에서 `lpips` 한 줄만 변경). 정규화 규약은
-  같이 바꾸지 않음 — 실효 세기를 바꾸지 않는 재매개화라 변수만 늘어남.
+ 같이 바꾸지 않음 — 실효 세기를 바꾸지 않는 재매개화라 변수만 늘어남.
 - 판정은 §2의 8장×4 seed 방향 지표 + `[0805]results.md` §3의 색·구조 지표. `w`가 커지면
-  `gradient_clip=1.0` 발동 빈도가 늘 수 있어 함께 기록함.
+ `gradient_clip=1.0` 발동 빈도가 늘 수 있어 함께 기록함.
 - 로깅 보강: 지금 남는 건 순간 비뿐이라 (a)의 5배 차이가 드러나지 않음. **누적 LPIPS/flow
-  gradient 비**를 추가해야 run 간 비교가 가능함.
+ gradient 비**를 추가해야 run 간 비교가 가능함.
 
 **한계** — ① 2×2는 셀당 n=1이고 학습 시드가 미고정이며(`[0805]results.md` §6-4) `run5_1`은
 투여량과 위치가 동시에 바뀐 조건이라, 위 논거는 부호를 설명하는 메커니즘이지 인과 증명이
@@ -302,8 +308,8 @@ latent diffusion + VAE decoder 경유 + ε/v/flow 전부에서 검증, `w_LPL≈
 Appendix A Fig.6(b)에 따르면 noise-gate 쪽에 유리하게 편향돼 있음. ③ 평가셋 8장이고, 방향
 지표만으로는 frizz와 sharpness를 구별하지 못하므로 `R`을 올릴 때 정성 관찰이 필요함.
 ④ 이 스윕에서 seed 불일치가 줄어들더라도, sparse stroke 사이 방향을 초기 noise와 모델
-prior가 정하는 메커니즘(`[0803]seed_test.md` §6)을 해결했다는 뜻은 아님 — LPIPS는 방향을
+prior가 정하는 메커니즘(`[DIGLAB][0803][장서현]seed_test.md` §6)을 해결했다는 뜻은 아님 — LPIPS는 방향을
 명시적으로 재는 항이 아니라 마스크 전체의 texture 유사도를 재는 항이라, 개선이 있어도
 "출력이 GT 쪽으로 덜 흔들리는" 간접 효과로 해석해야 함. 실제로 run4(R≈0.02로 frizz를
-해결한 조건)에서도 이 문제는 남았음(`[0803]seed_test.md` §6: "LPIPS 조정은 푸석거림을
+해결한 조건)에서도 이 문제는 남았음(`[DIGLAB][0803][장서현]seed_test.md` §6: "LPIPS 조정은 푸석거림을
 개선했지만 방향성 문제는 seed에 따라 여전히 나타남"). 
