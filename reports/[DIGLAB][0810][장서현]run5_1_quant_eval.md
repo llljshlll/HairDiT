@@ -5,24 +5,23 @@
 - 정성 비교는 몇 장만, 정량 비교는 50장으로 진행
 - 정량 비교용 test set은 bald 변환 없이 기존 test dataset(헤어 있는 이미지) 그대로 사용
 - 고주파 노이즈가 학습 부족 때문일 수 있으니 30 epoch까지 추가 학습 진행 지시(양상 먼저 확인)
-- 이미지를 직접 확인해보았을 때, run5_1에서는 특정 시드의 일부 이미지(seed 42)를 제외하고는 고주파 푸석거림 + 방향노이즈가 나오지 않음
+- 이미지를 직접 확인해보았을 때, run5_1에서는 특정 시드의 일부 이미지(seed 42)를 제외하고는 고주파 푸석거림 + 방향노이즈가 나오지 않음, 오히려 일부 시드에(seed2) mcs2보다 더 자연스러운 머릿결이 나옴 
 
 **합의 사항 → 상태**
 - [완료] run5_1에서의 정성평가
 - [부분] 30 epoch 추가 학습 지시 — 착수 전, run5_1의 epoch5→15 결과에서 머릿결 방향 노이즈 문제가 해결되지 않는 추세를 확인해(§2) 추가 학습으로 해결될지 의문, 또한, run2, 3, 4에서도 epoch 별 경향을 보면, 머릿결 방향 노이즈 문제가 해결되지 않음. 착수 여부 **판단 필요** 🔴
-- [완료] 50장 정량 평가 — `dataset/` held-out pool(466장, unbraid_test로 추정, §3) 중 무작위
- 50장 선정 후 run5_1/run6_1/run6_2 epoch15·4seed 추론 및 지표 산출 완료(§3)
+- [완료] 50장 정량 평가 - 50장 선정 후 run5_1/run6_1/run6_2 epoch15·4seed 추론 및 지표 산출 완료(§3)
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: run5_1 8장 육안 검토에서 고주파 곱슬거림은 seed 42의 일부 이미지를 제외하고 거의
- 관찰되지 않음(§1) — 그마저도 고주파라기보다 푸석거림 + 방향 노이즈에 가까움
+ 관찰되지 않음(§1) — 그마저도 고주파라기보다 푸석거림 + 방향 노이즈에 가까움(§1)
 - 결과: 50장 정량 평가에서 **방향 지표는 run5_1이 최선**(GT 오차 15.29°, seed 불일치
  13.15°)이나, **색/구조 지표는 run6_2가 최선**(dE_unbraid 5.10, lpips_unbraid 0.2304) —
  8장 기준이던 `[DIGLAB][0809][장서현]run6_results.md`의 "세기를 올리면 색·구조 지표도 같이
  악화"라는 결론과 반대 방향(§3.3), 재해석 필요 🔴
 - 막힌 것: epoch5→15로 갈수록 GT 방향 오차는 19.47→18.10°로 줄었지만(`[DIGLAB][0806][장서현]run5_test_result.md`
  §2-1) 푸석거림 + 노이즈는 육안상 크게 개선되지 않음(§2)
-- 다음: §3.3의 방향-vs-색 지표 상충을 어느 쪽 기준으로 최종 채택할지 논의, mcs2 대비 정성 비교 결과 보고
+- 다음: seed에 따라 푸석거림 + 방향노이즈의 정도가 다른데 원인 파악 및 해결 방안 탐색
 
 ## 0. run5_1은 어떤 모델인가
 
@@ -51,58 +50,43 @@ run5_1 = `run4`(baseline, `configs/lpips_low_phase1.yaml`)와 아키텍처·학�
 
 ## 1. run5_1 vs mcs2 결과 이미지 비교 (seed별)
 
-epoch 15(run5_1 최종 epoch) 고정, `data/test` 입력 스케치(`recolor_sketch`) 기준 8장을 seed
-`{1, 2, 3, 42}`별로 비교함. `mcs2_ref`는 seed 3·42에 `CM_1084` 산출물이 없어 해당 두 seed는
-7장만 표시함.
+epoch 15(run5_1 최종 epoch) 고정, mcs2는 phase2 40epoch 까지 학습된 점을 감안  
+일부 seed에서는 mcs2보다 run5_1이 더 자연스러운 머릿결 결과가 나옴(seed2)  
+색에 대한 loss항이 아직 적용되지 않았음으로 색은 무시, 머릿결에 대한 결과만 확인
 
 ### 1.1 seed 1
 
-| image | 스케치 | mcs2 | run5_1 |
-|---|---|---|---|
-| CM_1007 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1007.png) |
-| CM_1027 | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1027.png) |
-| CM_1033 | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1033.png) |
-| CM_1067 | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1067.png) |
-| CM_1068 | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1068.png) |
-| CM_1082 | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1082.png) |
-| CM_1172 | ![sketch](../data/test/recolor_sketch/CM_1172.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1172.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1172.png) |
+run5_1 CM_1027의 좌측 상단, CM_1067의 좌측 상단, CM_1082의 가르마 부분에서 노이즈 볼 수 있음
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1172 |
+|---|---|---|---|---|---|---|---|
+| 스케치 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![sketch](../data/test/recolor_sketch/CM_1172.png) |
+| mcs2 | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/1/CM_1172.png) |
+| run5_1 | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/1/epoch15/CM_1172.png) |
 
 ### 1.2 seed 2
-
-| image | 스케치 | mcs2 | run5_1 |
-|---|---|---|---|
-| CM_1007 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1007.png) |
-| CM_1027 | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1027.png) |
-| CM_1033 | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1033.png) |
-| CM_1067 | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1067.png) |
-| CM_1068 | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1068.png) |
-| CM_1082 | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1082.png) |
-| CM_1172 | ![sketch](../data/test/recolor_sketch/CM_1172.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1172.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1172.png) |
+오히려 mcs2보다 자연스러운 머릿결
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1172 |
+|---|---|---|---|---|---|---|---|
+| 스케치 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![sketch](../data/test/recolor_sketch/CM_1172.png) |
+| mcs2 | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/2/CM_1172.png) |
+| run5_1 | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/2/epoch15/CM_1172.png) |
 
 ### 1.3 seed 3
 
 
-| image | 스케치 | mcs2 | run5_1 |
-|---|---|---|---|
-| CM_1007 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1007.png) |
-| CM_1027 | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1027.png) |
-| CM_1033 | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1033.png) |
-| CM_1067 | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1067.png) |
-| CM_1068 | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1068.png) |
-| CM_1082 | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1082.png) |
-| CM_1172 | ![sketch](../data/test/recolor_sketch/CM_1172.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1172.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1172.png) |
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1172 |
+|---|---|---|---|---|---|---|---|
+| 스케치 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![sketch](../data/test/recolor_sketch/CM_1172.png) |
+| mcs2 | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/3/CM_1172.png) |
+| run5_1 | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/3/epoch15/CM_1172.png) |
 
 ### 1.4 seed 42
-
-| image | 스케치 | mcs2 | run5_1 |
-|---|---|---|---|
-| CM_1007 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1007.png) |
-| CM_1027 | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1027.png) |
-| CM_1033 | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1033.png) |
-| CM_1067 | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1067.png) |
-| CM_1068 | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1068.png) |
-| CM_1082 | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1082.png) |
-| CM_1172 | ![sketch](../data/test/recolor_sketch/CM_1172.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1172.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1172.png) |
+CM_1027, CM_1067 하단 푸석거림 + 방향 노이즈 발생
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1172 |
+|---|---|---|---|---|---|---|---|
+| 스케치 | ![sketch](../data/test/recolor_sketch/CM_1007.png) | ![sketch](../data/test/recolor_sketch/CM_1027.png) | ![sketch](../data/test/recolor_sketch/CM_1033.png) | ![sketch](../data/test/recolor_sketch/CM_1067.png) | ![sketch](../data/test/recolor_sketch/CM_1068.png) | ![sketch](../data/test/recolor_sketch/CM_1082.png) | ![sketch](../data/test/recolor_sketch/CM_1172.png) |
+| mcs2 | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1007.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1027.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1033.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1067.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1068.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1082.png) | ![mcs2](../outputs/0805/mcs2_ref/42/CM_1172.png) |
+| run5_1 | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1007.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1027.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1033.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1067.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1068.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1082.png) | ![run5_1](../outputs/0806/run5_1/42/epoch15/CM_1172.png) |
 
 ## 2. epoch 진행에 따른 푸석거림 / 방향 노이즈 양상
 
@@ -228,19 +212,16 @@ run6_2(10.94) < run6_1(10.99)로 run5_1이 최선이었음.
 가능한 설명(미확인, 판단 필요 🔴):
 - **표본 크기**: 8장은 색/구조 지표 하나가 이상치 한두 장에 흔들리기 쉬운 크기이고, 50장은
  그보다 안정적임 — 8장 결론이 표본 노이즈였을 가능성.
-- **표본 자체가 다름**: 8장은 정성 비교용으로 선별된 특정 이미지(`data/test`)이고 50장은
- held-out pool에서 무작위 추출한 이미지라, 애초에 다른 모집단을 보고 있을 가능성.
 - **정의 확장**: §3.0에서 밝힌 대로 이번 dE_unbraid/lpips_unbraid는 4-seed 평균(원 정의는
  고정 seed 1개) — seed 평균이 LPIPS 노출이 큰 run6_2 쪽에 유리하게 작용했을 가능성.
-- 세 가설 모두 이 리포트만으로 구분되지 않음. **`w_lpips` 상향을 재검토할지는 이 상충을
+- 가설 모두 이 리포트만으로 구분되지 않음. **`w_lpips` 상향을 재검토할지는 이 상충을
  어떻게 해석하느냐에 달려 있어 별도 판단 필요.**
 
 ## 4. 한계 / 다음
+- 특정 시드의 특정 이미지에서만 발생하는 노이즈 + 푸석거림 문제를 어떻게 정의하고 해결할 것인지.
 - §3.2/§3.3의 dE_unbraid/lpips_unbraid는 4-seed 평균으로 정의를 확장해 계산함 — 학습
  로그의 단일-seed 정의 수치와 절대값 비교 불가, run 간 상대 비교로만 사용
-- `lpips_braid`/`edge_iou_braid`는 braid_test 데이터가 로컬에 없어 이번 50장 평가에
- 포함되지 않음 — braid 도메인에서의 결론은 별도 확인 필요
-- §3.3 방향-vs-색 지표 상충은 원인(표본 크기/표본 차이/정의 확장 중 무엇인지) 미확정 —
+- §3.3 방향-vs-색 지표 상충은 원인(표본 크기/정의 확장 중 무엇인지) 미확정 —
  `w_lpips` 최종 채택 여부를 좌우하는 지점이라 **판단 필요** 🔴
 - §1의 mcs2 vs run5_1 비교는 세대가 다른 아키텍처 간 비교라(§0) 단일 변수 ablation으로 해석하지
  않음 — "현재 모델이 구세대 baseline보다 어느 지점에서 나아졌는가"를 보는 정성 자료로만 사용
@@ -250,6 +231,4 @@ run6_2(10.94) < run6_1(10.99)로 run5_1이 최선이었음.
  이전 run**이 이미 최대 epoch40까지 학습했는데도 같은 CM_1067 하단 방향 노이즈가 사라지지
  않음 — run5_1이 같은 손실 구성·같은 노이즈 축을 공유하는 이상, "epoch를 15→30으로 늘리면
  해결된다"는 가설은 최소 세 개의 선행 사례와 어긋남. **30 epoch 추가 학습은 실효가 낮을
- 가능성이 높다고 보되, "40 epoch까지 갔는데도 노이즈가 남았던 조건"과 run5_1이 손실
- 가중치·densify 여부까지 완전히 같은 조건은 아니라(§0, `[DIGLAB][0806][장서현]run5_test_result.md`
- §3) 100% 배제할 근거는 아님 — 착수 여부 최종 **판단 필요** 🔴
+ 가능성이 높음 
