@@ -1,21 +1,21 @@
-run5(densification) 결과
+# run5_results
 
-## 교수님과 상의 내용
+## 최상단 요약 (10줄 이내)
 
-| # | 지시사항 | 처리 결과 | 참고 |
-|---|---|---|---|
-| 1 | 새로 추가한 stroke의 색은 원본이 아니라 가장 가까운 주변(원본) stroke의 색을 가져와야 함 | 적용 완료 | §3-2 |
-| 2 | LPIPS를 타임스텝 기준 상위 30%(PixelGen 방식)부터 적용. 이때 가중치(`w_lpips`)를 그대로 가져가도 되는지 PixelGen 사례와 비교해 확인 필요 | 적용 완료 — 가중치 유지해도 목표 대역 안에 들어옴을 실측으로 확인 | §3-1 |
-| 3 | 밀도 단계(원본/T21/T15/T12)를 epoch마다 랜덤이 아니라 순차 라운드로빈으로 — epoch1=원본, epoch2=T21, epoch3=T15, epoch4=T12 순 | 적용 완료 | §3-2 |
-| 4 | GT sketch 색을 가져올 때 stroke당 대표색 하나로 통일해야 함( 얼룩덜룩하면 안 됨) | 확인 결과 이미 stroke당 단일색으로 처리 중이었음 | §3-3 |
+**지난 미팅 (2026-08-05 재학습 지침 관련 상의)** — 키워드 3줄
+- 새로 추가한 stroke 색은 원본이 아니라 가장 가까운 주변 stroke 색을 가져와야 함
+- LPIPS를 타임스텝 기준 상위 30%부터 적용 — 가중치(`w_lpips`) 유지 여부 확인 필요
+- 밀도 단계를 epoch마다 랜덤이 아닌 순차 라운드로빈으로, GT sketch 색은 stroke당 대표색 하나로 통일
 
+**합의 사항 → 상태**
+- [완료] 새 stroke 색 = 원본 아닌 가장 가까운 주변 stroke 색으로 전파 적용(§3-2)
+- [완료] LPIPS 상위 30%(σ≤0.7) 적용, 가중치(`w_lpips`) 유지해도 목표 대역 안에 들어옴을 실측 확인(§3-1)
+- [완료] 밀도 단계 순차 라운드로빈 적용(§3-2), GT sketch 색은 stroke당 단일색(기존에 이미 그렇게 처리 중이었음을 확인, §3-3)
 
-
-## 요약
-
-- run4 대비 run5는 **밀도 혼합 증강(DensifyAug) + LPIPS 활성 기준(step-warmup → 샘플별 noise-gate)** 두 가지를 동시에 바꾼 실험.
-- `[0803]seed_test.md` §5와 동일한 방향오차·시드불일치 지표(structure tensor)를 8장 × seed{1,2,3,42}에 적용한 결과, **run4 epoch15가 6개 조건(run4/run5 × epoch5/10/15) 중 GT 오차·seed 불일치 모두 최선**이고 run5는 epoch15(계획된 최종 지점)에서도 못 따라옴 — seed 불일치는 8/8 이미지 전부 악화(평균 −16.8%p).
-- 코드 변경 자체는 설계·로그 실측 모두 정합(§코드 상에서 바꾼 거) — 즉 버그가 아니라 **밀도 증강이 방향 일관성을 실제로 해치는 것으로 보임**. 원인이 밀도 증강 단독인지 LPIPS 변경과의 결합 효과인지는 이 분석만으로 분리 안 됨(run5는 2변수 변경, §결과 해석 시 주의).
+**이번 결과 / 막힌 것 / 다음**
+- 결과: run4 epoch15가 6개 조건 중 GT 오차·seed 불일치 모두 최선, run5는 epoch15(계획된 최종 지점)에서도 못 따라옴 — seed 불일치 8/8 이미지 전부 악화(평균 −16.8%p)
+- 막힌 것: 밀도 증강이 방향 일관성을 실제로 해치는 것으로 보이나, 원인이 밀도 증강 단독인지 LPIPS 변경과의 결합 효과인지 분리 안 됨(run5는 2변수 변경)
+- 다음: 두 변수(densify, LPIPS 게이트)를 분리한 대조 실험 필요 (→ `[DIGLAB][0806][장서현]run5 result.md`의 run5_1/run5_2로 이어짐)
 
 ## 1. 결과 이미지 및 run4와 비교
 
@@ -23,8 +23,8 @@ run4 vs run5, 둘 다 epoch15(진짜 동일epoch, §2-2 지표와 짝 맞춤). s
 쓰인 `data/test/recolor_sketch`.
 
 ### CM_1067
-seed42 하단 노이즈 여전히 존재  
-seed1, 2, 3모두 머릿결이 더 노이지해짐(헤어 상단부분 머릿결이 run4대비 블러리하고 노이지하게 나타남)  
+seed42 하단 노이즈 여전히 존재 
+seed1, 2, 3모두 머릿결이 더 노이지해짐(헤어 상단부분 머릿결이 run4대비 블러리하고 노이지하게 나타남) 
 | run | sketch | seed42 | seed1 | seed2 | seed3 |
 |---|---|---|---|---|---|
 | run4 epoch15 | <img src="../data/test/recolor_sketch/CM_1067.png" width="130"> | <img src="../outputs/0806/run4/42/epoch15/CM_1067.png" width="130"> | <img src="../outputs/0806/run4/1/epoch15/CM_1067.png" width="130"> | <img src="../outputs/0806/run4/2/epoch15/CM_1067.png" width="130"> | <img src="../outputs/0806/run4/3/epoch15/CM_1067.png" width="130"> |
@@ -76,7 +76,7 @@ seed1 좌측하단, seed3 가르마 노이즈
 | run4 epoch15 | <img src="../data/test/recolor_sketch/CM_1172.png" width="130"> | <img src="../outputs/0806/run4/42/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run4/1/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run4/2/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run4/3/epoch15/CM_1172.png" width="130"> |
 | run5 epoch15 | <img src="../data/test/recolor_sketch/CM_1172.png" width="130"> | <img src="../outputs/0806/run5/42/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run5/1/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run5/2/epoch15/CM_1172.png" width="130"> | <img src="../outputs/0806/run5/3/epoch15/CM_1172.png" width="130"> |
 
-## 2. 방향 오차 / 시드 불일치 평가 ([0803]seed_test.md §5 방법론)
+## 2. 방향 오차 / 시드 불일치 평가 ([DIGLAB][0803][장서현]seed_test.md §5 방법론)
 
 방향오차 / 시드 불일치 지표 data 8장 × seed{1,2,3,42} 6개 조건(run4/run5 × epoch5/10/15) 전체에 적용
 
@@ -84,10 +84,10 @@ seed1 좌측하단, seed3 가르마 노이즈
 
 | run | GT 오차 평균 [deg] | coherence | seed 불일치 [deg] |
 |---|---|---|---|
-| run4 epoch5  | 20.61 | 0.769 | 18.53±3.70 |
+| run4 epoch5 | 20.61 | 0.769 | 18.53±3.70 |
 | run4 epoch10 | 19.59 | 0.762 | 16.50±3.00 |
 | **run4 epoch15** | **19.29** | **0.761** | **15.80±3.07** |
-| run5 epoch5  | 21.99 | 0.731 | 20.33±5.00 |
+| run5 epoch5 | 21.99 | 0.731 | 20.33±5.00 |
 | run5 epoch10 | 20.09 | 0.745 | 17.75±2.97 |
 | run5 epoch15 | 20.83 | 0.708 | 18.43±3.59 |
 
@@ -189,7 +189,7 @@ run5는 run4 대비 **학습 데이터와 LPIPS 활성 규칙 두 가지**가 �
 
 **추론(inference)**: 지금까지 추론에 쓰던 sketch는 과거에 픽셀 단위로 recolor해둔 파일을
 그대로 재사용하고 있어서, 학습 조건과 어긋난 채로 결과가 얼룩덜룩하게 보였음
-([0803]seed_test.md §3.1 CM_1082 등). **이번 run5부터 추론에도 학습과 동일한 stroke 단위
+([DIGLAB][0803][장서현]seed_test.md §3.1 CM_1082 등). **이번 run5부터 추론에도 학습과 동일한 stroke 단위
 recolor sketch를 쓰도록 통일** — 학습·추론 조건 불일치를 해소함.
 
 (recolor 방식 상세: `reports/[0708]GTrecolor_loss_GateOnOff.md` 참고)
