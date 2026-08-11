@@ -146,9 +146,7 @@ ControlNet residual 주입이라는 점을 이름에 명시했다.
 
 - **v_cond**: 기존 추론과 동일 — ControlNet이 sketch·matte에서 뽑은 residual을 프리즌
   SD3.5 transformer에 주입해 예측
-- **v_uncond**: 그 residual을 아예 주지 않고 프리즌 transformer 혼자 예측
-  (`block_controlnet_hidden_states=None`) — sketch·matte 정보가 전혀 없을 때 모델이
-  무엇을 그리려 하는지
+- **v_uncond**: 그 residual을 아예 주지 않고 frozen transformer 혼자 예측 — sketch·matte 정보가 전혀 없을 때 모델이 무엇을 그리려 하는지
 
 매 스텝 transformer를 두 번 통과(v_cond 1회 + v_uncond 1회)시켜 위 식으로 합성
 (`--cfg_scale`, `scripts/infer_custom.py`). ControlNet 자체는 v_cond 계산에만 필요해
@@ -160,8 +158,8 @@ ControlNet residual 주입이라는 점을 이름에 명시했다.
 것. 이 프로젝트의 ControlNet은 학습 내내 sketch·matte가 한 번도 빈 적이 없어, 위
 v_uncond는 모델이 학습 중 한 번도 보지 못한 입력이다 — 이 구조에서 만들 수 있는 가장
 그럴듯한 근사치일 뿐, 실제로 학습된 null 분포는 아니다. 그래서 SD3.5 Medium 자체
-기본값(w=5.0)이 이 모델에도 그대로 적용된다는 보장이 없고, §3-3에서 실측으로 확인함
-(5.0도 이미 과도, 실제 최적점은 2.0 근처로 모델 자체 기본값보다도 한참 낮음).
+기본값(w=5.0)이 이 모델에도 그대로 적용된다는 보장이 없고, §3-3에서 실측으로 확인함.  
+또한, 기존 모델에서도 CFG만 있고, CRG를 쓰지 않음. controlNet에서도 residual의 강도를 올리는 식의 방법은 쓰지만 CRG랑 다름
 
 ### 3-2. 발견 — matte 밖 프리즌 prior의 얼굴 생성
 
