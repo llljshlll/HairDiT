@@ -10,7 +10,7 @@
 - [완료] 실험1: 4-arm 정량(50장×4seed) + 정성(8장×GT색/color 스케치)
 - [완료] 실험2: mcs2·run5_1 BLD 없음·CRG 없음 8장 비교
 
-**이번 결과 / 막힌 것 / 다음**
+**이번 결과**
 - 결과: 4-arm 전부 arm4(T15+CRG2.0)가 방향 지표 전 항목 최선(§1.1)
 - 결과 : T15/CRG2.0 일 때 정량평가 결과가 가장 좋지만, 정성평가에서는 오히려 T∞/CRG2.0가 더 자연스러워보임(§1.2)
 - 결과: run5_1 15epoch로 colorful sketch에 대해 생성했을 때, colorful sketch 무시하고 자연색 생성, run4(40epoch)는 원색 그대로 재현 => epoch 수 늘리면 color 재현할 것으로 예상(§1.3) 
@@ -44,9 +44,10 @@ run5_1, BLD 포함.
 **결과**
 - 방향 지표 3종(GT오차·coherence·seed불일치), arm1→4 단조 개선: GT오차 -9.2%, coherence
   +8.2%, seed불일치 -29.4%
-- dE_unbraid는 반대로 단조 악화(+11.6%) — CRG의 색 드리프트 트레이드오프
+- dE_unbraid는 반대로 단조 악화(+11.6%) 
 - lpips_unbraid는 arm4 최저(0.2154)로 최선, dE와 반대 방향
 - outlier, arm3(28) 대비 arm4(33) 소폭 증가 — 방향 정확도 개선과 outlier 억제 불일치
+* 이미지 하나당 4개 seed로 만든 결과들의 GT오차 평균을 구하고, 그 평균보다 1σ 이상 벗어난 (이미지, seed) 조합을 outlier로 셈
 
 ### 1.2 정성평가(GT sketch)
 
@@ -98,12 +99,10 @@ run4_results.md`, `reports/[0726]results_analysis.md`, `reports/[0718]results.md
 
 ## 2. 실험 2: backbone prior 비교 (mcs2 vs run5_1)
 
-**지침**: mcs2는 timestep 관례 오류로 frozen DiT prior 무력화, ControlNet이 머리 구조를
-통째로 생성(CN=전체 내용 지정자). run5 계열은 timestep 정상화로 backbone 자체가 생성
-엔진, ControlNet은 조향자(prior 활성). 검증 방법: BLD, CRG 없이 sketch·matte만 준 상태에서
-matte 밖(비-헤어) 영역 비교 — run5_1은 자연스러운 얼굴, mcs2는 구조 붕괴 예측.
+**지침**: mcs2는 학습 당시 timestep 관례가 어긋나 프리즌 DiT prior가 사실상 무력화된 상태였고, 그 빈자리를 ControlNet이 메워 머리 구조를 통째로 만들어낸 것으로 추정(CN=전체 내용 지정자). run5 계열은 이후 timestep을 정상화해 backbone이 직접 생성 엔진 역할을 하고 ControlNet은 완만한 조향자 수준에 그친다는 게 가설.  
+검증: BLD·CRG 없이 sketch·matte만 준 상태로 matte 밖(비-헤어) 영역을 비교 — 가설대로라면 run5_1은 자연스러운 얼굴, mcs2는 구조 붕괴로 나와야 함.
 
-**방법**: `--face` 없음·BLD 없음·`--cfg_scale` 없음(CRG 없음), sketch·matte는 GT색
+**방법**: BLD 없음·, CRG 없음, sketch·matte는 GT색
 recolor 스케치로 정상 입력. 8장, seed42. 
 
 ### 2.1 결과 이미지

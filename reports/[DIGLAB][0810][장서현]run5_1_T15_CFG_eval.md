@@ -14,8 +14,7 @@
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: T15 densify, 50장 중 48장 개선, seed 불일치 13.14°→12.32°(-6.2%)(§1)
-- 결과: CRG 2.0에서 GT 오차 최선(14.32°/14.66°) — 이 프로젝트가 쓰는 SD3.5 Medium
-  자체 기본값(5.0)보다도 낮은 지점(§3), 두 이미지의 방향 노이즈 눈에 띄게 완화
+- 결과: CRG 2.0에서 GT 오차 최선(14.32°/14.66°) — 두 이미지의 방향 노이즈 눈에 띄게 완화
 - 다음: CRG 1.5~2.0 사이 세분화 스윕, 여러 이미지에 대해 시도, 정량평가 진행
 
 ---
@@ -73,10 +72,6 @@ GT 오차 -2.5%, seed 불일치 -6.2%, coherence 상승, outlier(4-seed 평균 �
 | CM_1007 (-12.3%) | <img src="../data/eval50_recolor_sketch/CM_1007.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/1/CM_1007.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1007.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/1/CM_1007.png" width="110"> | <img src="../dataset/img/CM_1007.png" width="110"> |
 | R2_1424 (+0.1%) | <img src="../data/eval50_recolor_sketch/R2_1424.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/R2_1424.png" width="110"> | <img src="../data/densified_shs_eval50/T15/R2_1424.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/R2_1424.png" width="110"> | <img src="../dataset/img/R2_1424.png" width="110"> |
 
-### 1-4. 한계
-
-- dE_unbraid, T∞→T15에서 소폭 상승(4.578→4.655, +1.7%) — 변화폭 작아 표본 n=50
-  하나만으로는 판단 보류
 
 ---
 
@@ -148,18 +143,16 @@ ControlNet residual 주입이라는 점을 이름에 명시했다.
   SD3.5 transformer에 주입해 예측
 - **v_uncond**: 그 residual을 아예 주지 않고 frozen transformer 혼자 예측 — sketch·matte 정보가 전혀 없을 때 모델이 무엇을 그리려 하는지
 
-매 스텝 transformer를 두 번 통과(v_cond 1회 + v_uncond 1회)시켜 위 식으로 합성
-(`--cfg_scale`, `scripts/infer_custom.py`). ControlNet 자체는 v_cond 계산에만 필요해
-한 번만 도므로, 전체 비용은 정확히 2배가 아니라 약 1.4~1.5배(파이프라인에서 가장
+매 스텝 transformer를 두 번 통과(v_cond 1회 + v_uncond 1회)시켜 위 식으로 합성. ControlNet 자체는 v_cond 계산에만 필요해
+한 번만 도므로, 전체 비용은 약 1.4~1.5배(파이프라인에서 가장
 무거운 부분이 transformer라 그쪽만 2배가 되고 ControlNet 비용은 그대로 유지).
 
 **한계**: 표준 CFG가 잘 작동하는 전제는, 학습 중 일부 스텝에서 조건을 일부러 랜덤하게
 비우는 "conditioning dropout"을 거쳐 모델이 "조건 없을 때"의 분포를 실제로 배웠다는
 것. 이 프로젝트의 ControlNet은 학습 내내 sketch·matte가 한 번도 빈 적이 없어, 위
 v_uncond는 모델이 학습 중 한 번도 보지 못한 입력이다 — 이 구조에서 만들 수 있는 가장
-그럴듯한 근사치일 뿐, 실제로 학습된 null 분포는 아니다. 그래서 SD3.5 Medium 자체
-기본값(w=5.0)이 이 모델에도 그대로 적용된다는 보장이 없고, §3-3에서 실측으로 확인함.  
-또한, 기존 모델에서도 CFG만 있고, CRG를 쓰지 않음. controlNet에서도 residual의 강도를 올리는 식의 방법은 쓰지만 CRG랑 다름
+그럴듯한 근사치일 뿐, 실제로 학습된 null 분포는 아님.
+또한, 기존 모델에서는 CFG만 있고, CRG를 쓰지 않음. controlNet에서도 residual의 강도를 올리는 식의 방법은 쓰지만 CRG랑 다름
 
 ### 3-2. 발견 — matte 밖 프리즌 prior의 얼굴 생성
 
@@ -187,10 +180,11 @@ BLD 매 스텝 블렌딩이 matte 안쪽 헤어 생성에도 개입 — 동일 s
 | 7.5 | 16.18 | 0.828 | 16.62 | 0.826 |
 
 coherence, CM_1067은 전 구간 거의 단조 증가(0.748→0.830→0.826)지만 CM_1027은 3.5→5.0
-구간에서 하락(0.804→0.793) — 두 이미지 모두 단조는 아님. GT 오차는 두 이미지 모두
-**2.0에서 최선**, 그 위·아래 모두 재악화 — 비단조, 최적점이 U자형 곡선의 저점. 정성:
-1.5·2.0은 3.5 이상 대비 색 드리프트(주황/구리색 과포화)가 뚜렷이 약함, 스케일 더
-올릴수록 결 선명도는 계속 오르지만 색·경계 아티팩트가 함께 커짐.
+구간에서 하락(0.804→0.793)   
+GT 오차는 두 이미지 모두
+**2.0에서 최선**, 그 위·아래 모두 재악화 — 비단조, 최적점이 U자형 곡선의 저점.   
+정성평가:
+스케일 더 올릴수록 결 선명도는 계속 오르지만 색·경계 아티팩트가 함께 커짐.
 2.0에서 두 이미지 모두 기존에 있던 노이즈 뚜렷이 완화
 
 | CRG | CM_1027 (GT오차/coh) | CM_1067 (GT오차/coh) |
@@ -202,14 +196,3 @@ coherence, CM_1067은 전 구간 거의 단조 증가(0.748→0.830→0.826)지�
 | 5.0 — 15.92/0.793, 15.40/0.830 | <img src="../outputs/0810/cfg_sweep_composited/5.0/CM_1027.png" width="160"> | <img src="../outputs/0810/cfg_sweep_composited/5.0/CM_1067.png" width="160"> |
 | 7.5 — 16.18/0.828, 16.62/0.826 | <img src="../outputs/0810/cfg_sweep_composited/7.5/CM_1027.png" width="160"> | <img src="../outputs/0810/cfg_sweep_composited/7.5/CM_1067.png" width="160"> |
 
-### 3-4. 해석
-
-최적점 CRG≈2.0, 두 이미지 일치. uncond 분기 미학습(§3-1) 고려 시 SD3.5 Medium
-자체 기본값(5.0)도 과도, 이 아키텍처의 적정 구간은 그보다 낮음. 다음 스윕:
-1.5~2.0 사이 세분화(1.75 등) 제안.
-
----
-
-## 4. 한계 / 다음
-- CRG 표본 seed42·이미지 2장·1 seed — 확장 시 판단 안정화
-- T15 densify, dose-response 성격 — 낮은 threshold(T12) 확장 시 개선폭 확인 가능
