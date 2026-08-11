@@ -2,7 +2,7 @@
 
 ## 최상단 요약 (10줄 이내)
 
-**지난 미팅 (2026-08-11, 교수님 지시)** — 키워드 3줄
+**지난 미팅 (2026-08-11)** — 키워드 3줄
 - 4-arm(T∞/T15 × w=1/CRG2.0) 확장 평가 설계, 정량 50장×4seed·정성 8장×2버전
 - mcs2("CN=전체 내용 지정자") vs run5_1("CN=조향자, backbone prior 활성") 가설 검증 지시
 - CRG 2.0 확장 적용 제안 수정 승인
@@ -21,8 +21,7 @@
 
 ## 1. 실험 1: 4-arm 평가
 
-**지침**: "4-arm" = T∞/T15(densify) × w=1/CRG2.0(guidance) 조합 4종 비교. 8/11 검토노트,
-"CRG 2.0을 다른 이미지에도 적용" 제안 수정 승인 후 설계.
+**지침**: "4-arm" = T∞/T15(densify) × w=1/CRG2.0(guidance) 조합 4종 비교.
 
 | arm | densify | guidance | 목적 |
 |---|---|---|---|
@@ -34,8 +33,7 @@
 ### 1.1 정량평가
 
 **방법**: 50장(GT색 recolor 스케치 T∞ / SHS T15 densify 스케치) × seed{1,2,3,42} ×
-run5_1, face·matte·BLD 전부 포함. arm1·2는 기존(0810) 데이터 재사용, arm3·4는
-`--cfg_scale 2.0` 추가 신규 생성(`scripts/eval/quant50_4arm.py`).
+run5_1, face·matte·BLD 전부 포함. 
 
 | arm | GT오차[deg] | coherence | seed불일치[deg] | outlier[/200] | dE_unbraid | lpips_unbraid |
 |---|---:|---:|---:|---:|---:|---:|
@@ -53,8 +51,7 @@ run5_1, face·matte·BLD 전부 포함. arm1·2는 기존(0810) 데이터 재사
 
 ### 1.2 정성평가(GT sketch)
 
-**방법**: 기존 8장 sketch GT 헤어색 recolor(`recolor_sketch_from_gt`, 저장 위치
-`data/test/recolor_sketch/`) 후 4-arm 각 1회 생성, seed42.
+**방법**: 기존 8장 sketch 4-arm 각 1회 생성, seed42.
 
 | | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
 |---|---|---|---|---|---|---|---|---|
@@ -67,7 +64,7 @@ run5_1, face·matte·BLD 전부 포함. arm1·2는 기존(0810) 데이터 재사
 
 ### 1.3 정성평가(color sketch)
 
-**방법**: 동일 8장, sketch를 GT색으로 바꾸지 않고 원본 색 그대로 4-arm 생성(run5_1,
+**방법**: 동일 8장, sketch를 GT색으로 바꾸지 않고 원본 색(colorful sketch) 그대로 4-arm 생성(run5_1,
 epoch15), seed42.
 
 | | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
