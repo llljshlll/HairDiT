@@ -14,10 +14,9 @@
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: T15 densify, 50장 중 48장 개선, seed 불일치 13.14°→12.32°(-6.2%)(§1)
-- 결과: CFG 2.0에서 GT 오차 최선(14.32°/14.66°), 두 이미지 일치 — 표준 CFG 관례(7.5)보다
-  훨씬 낮은 지점(§3)
-- 막힌 것: matte 밖 영역에 프리즌 prior의 얼굴 생성 확인(§3-2) — 원인·영향 범위 판단 필요
-- 다음: CFG 1.5~2.0 사이 세분화 스윕
+- 결과: CFG 2.0에서 GT 오차 최선(14.32°/14.66°) — 표준 CFG 관례(7.5)보다
+  훨씬 낮은 지점(§3), 두 이미지의 방향 노이즈 눈에 띄게 완화
+- 다음: CFG 1.5~2.0 사이 세분화 스윕, 여러 이미지에 대해 시도
 
 ---
 
@@ -37,8 +36,6 @@
 
 ### 1-1. 방법
 
-`data/densify_masks/` 로컬 부재로 50장용 T15 컬러 스케치 신규 생성.
-
 1. 50장 원본 스케치(`dataset/sketch`) GT색 recolor(`recolor_sketch_from_gt`, densify
    전 수행 — 학습 순서와 동일)
 2. `scripts/preprocess/densify_shs.py colored --thresholds 15` T15 색전파(SHS 공식
@@ -51,12 +48,12 @@
 
 ### 1-2. 결과 — macro 평균 (50장×4seed)
 
-| set | GT 오차 [deg] | coherence | seed 불일치 [deg] | dE_unbraid | lpips_unbraid |
-|---|---:|---:|---:|---:|---:|
-| T∞ (densify 없음) | 14.95 | 0.769 | 13.14±4.64 | 4.5783 | 0.2222 |
-| **T15** | **14.57** | **0.782** | **12.32±4.50** | 4.6546 | **0.2175** |
+| set | GT 오차 [deg] | coherence | seed 불일치 [deg] | outlier[/200] | dE_unbraid | lpips_unbraid |
+|---|---:|---:|---:|---:|---:|---:|
+| T∞ (densify 없음) | 14.95 | 0.769 | 13.14±4.64 | 37 | 4.5783 | 0.2222 |
+| **T15** | **14.57** | **0.782** | **12.32±4.50** | **33** | 4.6546 | **0.2175** |
 
-GT 오차 -2.5%, seed 불일치 -6.2%, coherence 상승.
+GT 오차 -2.5%, seed 불일치 -6.2%, coherence 상승, outlier(4-seed 평균 대비 1σ 초과) -10.8%.
 
 ### 1-3. per-image
 
@@ -73,13 +70,11 @@ GT 오차 -2.5%, seed 불일치 -6.2%, coherence 상승.
 | CM_1020 (-17.6%) | <img src="../data/eval50_recolor_sketch/CM_1020.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/CM_1020.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1020.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/CM_1020.png" width="110"> | <img src="../dataset/img/CM_1020.png" width="110"> |
 | CM_1223 (-13.8%) | <img src="../data/eval50_recolor_sketch/CM_1223.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/CM_1223.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1223.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/CM_1223.png" width="110"> | <img src="../dataset/img/CM_1223.png" width="110"> |
 | CM_1057 (-13.6%) | <img src="../data/eval50_recolor_sketch/CM_1057.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/CM_1057.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1057.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/CM_1057.png" width="110"> | <img src="../dataset/img/CM_1057.png" width="110"> |
-| CM_1134 (-12.8%) | <img src="../data/eval50_recolor_sketch/CM_1134.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/CM_1134.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1134.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/CM_1134.png" width="110"> | <img src="../dataset/img/CM_1134.png" width="110"> |
+| CM_1007 (-12.3%) | <img src="../data/eval50_recolor_sketch/CM_1007.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/1/CM_1007.png" width="110"> | <img src="../data/densified_shs_eval50/T15/CM_1007.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/1/CM_1007.png" width="110"> | <img src="../dataset/img/CM_1007.png" width="110"> |
 | R2_1424 (+0.1%) | <img src="../data/eval50_recolor_sketch/R2_1424.png" width="110"> | <img src="../outputs/0810/eval50_face/T_inf/42/R2_1424.png" width="110"> | <img src="../data/densified_shs_eval50/T15/R2_1424.png" width="110"> | <img src="../outputs/0810/eval50_face/T15/42/R2_1424.png" width="110"> | <img src="../dataset/img/R2_1424.png" width="110"> |
 
 ### 1-4. 한계
 
-- outlier 개수(4-seed 평균 대비 1σ 초과): T∞ 37/200 → T15 33/200(-10.8%) — 오차 크기뿐
-  아니라 outlier 발생 빈도도 소폭 감소
 - dE_unbraid, T∞→T15에서 소폭 상승(4.578→4.655, +1.7%) — 변화폭 작아 표본 n=50
   하나만으로는 판단 보류
 
@@ -134,12 +129,32 @@ seed42 결과:
 
 ### 3-1. 구현
 
-Unconditional 분기 = "ControlNet residual 없는 프리즌 transformer 단독 forward"
-(`block_controlnet_hidden_states=None`). 매 스텝 uncond/cond 2-pass,
-`v = v_uncond + w·(v_cond - v_uncond)` blend(`--cfg_scale`, 비용 약 1.4~1.5배).
+Classifier-free guidance(CFG): 조건(conditioning)이 결과에 미치는 영향력을 재학습 없이
+추론 시점에서만 조절하는 표준 기법. 매 denoising 스텝마다 조건이 있는 예측(v_cond)과
+조건이 없는 예측(v_uncond)을 각각 구하고, 그 차이(v_cond − v_uncond)를 "조건이 미는
+방향"으로 간주해 그 방향으로 더 세게 밀어붙임: `v = v_uncond + w·(v_cond − v_uncond)`,
+w = guidance scale. Stable Diffusion 등 text-to-image 모델에서는 w≈7.5가 표준값.
 
-한계: conditioning dropout 학습 이력 부재 — uncond 분기, 학습된 null 분포 아님.
-표준 CFG 스케일 관례(7.5 등) 적용 미보장 — §3-3에서 확인.
+이 모델은 텍스트 프롬프트가 없고 sketch·matte를 ControlNet residual로 주입하는
+구조라, "조건 있음/없음"을 다음과 같이 대응시켰다.
+- **v_cond**: 기존 추론과 동일 — ControlNet이 sketch·matte에서 뽑은 residual을 프리즌
+  SD3.5 transformer에 주입해 예측
+- **v_uncond**: 그 residual을 아예 주지 않고 프리즌 transformer 혼자 예측
+  (`block_controlnet_hidden_states=None`) — sketch·matte 정보가 전혀 없을 때 모델이
+  무엇을 그리려 하는지
+
+매 스텝 transformer를 두 번 통과(v_cond 1회 + v_uncond 1회)시켜 위 식으로 합성
+(`--cfg_scale`, `scripts/infer_custom.py`). ControlNet 자체는 v_cond 계산에만 필요해
+한 번만 도므로, 전체 비용은 정확히 2배가 아니라 약 1.4~1.5배(파이프라인에서 가장
+무거운 부분이 transformer라 그쪽만 2배가 되고 ControlNet 비용은 그대로 유지).
+
+**한계**: 표준 CFG가 잘 작동하는 전제는, 학습 중 일부 스텝에서 조건을 일부러 랜덤하게
+비우는 "conditioning dropout"을 거쳐 모델이 "조건 없을 때"의 분포를 실제로 배웠다는
+것. 이 프로젝트의 ControlNet은 학습 내내 sketch·matte가 한 번도 빈 적이 없어, 위
+v_uncond는 모델이 학습 중 한 번도 보지 못한 입력이다 — 이 구조에서 만들 수 있는 가장
+그럴듯한 근사치일 뿐, 실제로 학습된 null 분포는 아니다. 그래서 표준 guidance
+scale(7.5 등)이 이 모델에도 그대로 적용된다는 보장이 없고, §3-3에서 실측으로 확인함
+(7.5는 과도, 실제 최적점은 2.0 근처로 표준값보다 한참 낮음).
 
 ### 3-2. 발견 — matte 밖 프리즌 prior의 얼굴 생성
 
@@ -169,7 +184,8 @@ BLD 매 스텝 블렌딩이 matte 안쪽 헤어 생성에도 개입 — 동일 s
 coherence, 스케일 증가에 따라 단조 증가. GT 오차는 두 이미지 모두 **2.0에서 최선**,
 그 위·아래 모두 재악화 — 비단조, 최적점이 U자형 곡선의 저점. 정성: 1.5·2.0은 3.5
 이상 대비 색 드리프트(주황/구리색 과포화)가 뚜렷이 약함, 스케일 더 올릴수록 결
-선명도는 계속 오르지만 색·경계 아티팩트가 함께 커짐.
+선명도는 계속 오르지만 색·경계 아티팩트가 함께 커짐.   
+2.0에서 두 이미지 모두 기존에 있던 노이즈 없어짐
 
 | CFG | CM_1027 (GT오차/coh) | CM_1067 (GT오차/coh) |
 |---|---|---|
@@ -189,9 +205,5 @@ coherence, 스케일 증가에 따라 단조 증가. GT 오차는 두 이미지 
 ---
 
 ## 4. 한계 / 다음
-
-- 지난 세션 run5_1/run6_1/run6_2 50장 비교, §3-2 발견(BLD가 matte 안쪽 생성에도
-  개입) 적용 여부 재작업 필요 판단 🔴
-- §1-4 outlier 개수 계산 필요
 - CFG 표본 seed42·이미지 2장·1 seed — 확장 시 판단 안정화
 - T15 densify, dose-response 성격 — 낮은 threshold(T12) 확장 시 개선폭 확인 가능
