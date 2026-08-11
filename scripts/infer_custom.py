@@ -199,6 +199,8 @@ def run_sampling(
     vae=None, face=None, bld_mode="full", bld_soft_steps=None,
     gate_alpha: float = 1.0, bld_alpha: float = 1.0,
     use_last_block_hook: bool = True, raw_sigma_timestep: bool = False,
+    cond_scale: float = 1.0, cfg_scale: float | None = None,
+    fixed_timestep: float | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
     """Euler sampling → (hair_latent, face_latent | None).
 
@@ -215,6 +217,20 @@ def run_sampling(
                            ([0728]texture_reanalysis.md §6-A).
     raw_sigma_timestep — True면 모델에 넘기는 timestep을 sigma*num_train_timesteps 대신
                           raw sigma(0~1)로 대체 (mcs2 방식 재현, §6-B).
+    cond_scale — ControlNet residual(block_samples) 전체에 곱하는 스칼라. 1.0=기존 동작.
+                 >1.0은 프리즌 transformer 대비 sketch conditioning의 상대적 영향력을 키우고
+                 (헤어 방향 노이즈가 timestep 정규화로 재활성화된 prior와 성긴 stroke 구간에서
+                 경쟁하는 것이라는 가설의 대응 실험, planning/[0810]causation.md §2-1/2-4),
+                 <1.0은 반대로 prior 쪽 비중을 키운다. 재학습 없이 추론 시점에서만 조절.
+    cfg_scale — True classifier-free guidance: v = v_uncond + w*(v_cond - v_uncond).
+                 uncond 분기는 "ControlNet residual이 전혀 없는" 프리즌 transformer 단독
+                 forward(block_controlnet_hidden_states=None) — 이 모델은 sketch/matte
+                 dropout으로 학습된 적이 없어 "진짜" null 분포는 아니지만, 이 아키텍처에서
+                 가장 원리적인 unconditional 근사다(=ControlNet 기여가 0인 상태, 즉 프리즌
+                 prior 단독). cond_scale과 달리 스텝마다 transformer를 두 번 통과하므로
+                 비용이 약 2배. None(기본)이면 uncond pass 자체를 건너뛴다(cond_scale=1.0과
+                 동일 비용). 표준 CFG 관례상 스케일 1.0=uncond 영향 없음(=cond만), 값이
+                 클수록 conditioning 쪽으로 외삽이 강해진다.
     face_latent(x0_bg)는 인코딩한 배경 latent이며 composite_full에서 재사용된다.
     """
     scheduler.set_timesteps(num_steps, device=device)
@@ -237,6 +253,10 @@ def run_sampling(
         # 모델에 주는 timestep은 SD3.5 규약(= sigma*1000)인 scheduler.timesteps 값 t.
         # sigma는 BLD 노이징에 쓰고, raw_sigma_timestep=True면 모델 timestep도 이걸로 대체(mcs2 재현).
         timesteps_1d = sigmas_1d.float() if raw_sigma_timestep else t.to(device=device).float().view(1)
+        if fixed_timestep is not None:
+            # 모델이 받는 timestep 임베딩 입력만 상수로 고정, 실제 스케줄(t/sigmas_1d 기반
+            # scheduler.step·BLD 노이징)은 그대로 진행 — 스케줄 위치 의존성 진단용.
+            timesteps_1d = torch.tensor([fixed_timestep], device=device, dtype=torch.float32)
 
         # BLD(full): matte 바깥을 face의 noised latent로 블렌딩.
         #   bld_soft_steps — 순수 배경(mask==0)은 매 스텝 계속, soft 경계(0<mask<1)는
@@ -261,15 +281,35 @@ def run_sampling(
         if schedule != "none":
             block_samples = gate_block_samples(block_samples, matte_bf, schedule, gate_alpha=gate_alpha)
 
-        v_pred = transformer_forward_full_residual(
+        if cond_scale != 1.0:
+            block_samples = [s * cond_scale for s in block_samples]
+
+        null_enc_hs_bf = null_enc_hs.to(dtype=torch.bfloat16)
+        null_pooled_bf = null_pooled.to(dtype=torch.bfloat16)
+
+        v_cond = transformer_forward_full_residual(
                 transformer,
                 block_samples,
                 hidden_states=latents,
-                encoder_hidden_states=null_enc_hs.to(dtype=torch.bfloat16),
-                pooled_projections=null_pooled.to(dtype=torch.bfloat16),
+                encoder_hidden_states=null_enc_hs_bf,
+                pooled_projections=null_pooled_bf,
                 timestep=timesteps_1d,
                 return_dict=False,
             )[0]
+
+        if cfg_scale is not None and cfg_scale != 1.0:
+            # unconditional 분기: ControlNet residual 없이 프리즌 transformer 단독 forward.
+            v_uncond = transformer(
+                hidden_states=latents,
+                encoder_hidden_states=null_enc_hs_bf,
+                pooled_projections=null_pooled_bf,
+                timestep=timesteps_1d,
+                block_controlnet_hidden_states=None,
+                return_dict=False,
+            )[0]
+            v_pred = v_uncond + cfg_scale * (v_cond - v_uncond)
+        else:
+            v_pred = v_cond
 
         latents = scheduler.step(v_pred, t, latents, return_dict=False)[0]
 
@@ -496,6 +536,20 @@ def main():
     parser.add_argument("--raw_sigma_timestep", action="store_true",
                         help="[0728]texture_reanalysis.md §6-B: 모델 timestep을 sigma*1000 "
                              "대신 raw sigma(0~1)로 대체 (mcs2 방식 재현).")
+    parser.add_argument("--cond_scale", type=float, default=1.0,
+                        help="ControlNet residual(block_samples) 전체에 곱하는 스칼라. "
+                             "1.0=기존 동작. 재학습 없이 sketch conditioning 대 프리즌 prior의 "
+                             "상대적 영향력을 조절 (planning/[0810]causation.md §2-1/2-4).")
+    parser.add_argument("--cfg_scale", type=float, default=None,
+                        help="True classifier-free guidance scale. 미지정(기본)이면 비활성 "
+                             "(uncond pass 생략, cond_scale과 동일 비용). 지정 시 스텝마다 "
+                             "transformer를 uncond/cond 두 번 통과(비용 약 2배).")
+    parser.add_argument("--fixed_timestep", type=float, default=None,
+                        help="지정 시 모델(controlnet·transformer)에 넘기는 timestep 임베딩 "
+                             "입력을 이 상수로 고정(SD3.5 규약, 0~1000 스케일). 실제 노이즈 "
+                             "제거 스케줄(scheduler.step, BLD)은 정상 진행 — 모델이 스케줄 "
+                             "위치 정보에 실제로 의존하는지 확인하는 진단용 (timestep 버그 "
+                             "동작 확인 실험).")
     parser.add_argument("--zero_raw_matte", action="store_true",
                         help="[0728]texture_reanalysis.md §7-3: RawMatteAnchor 출력(raw_anchor)을 "
                              "0으로 꺼서 ctrl_cond에서 B_matte(MatteCNN)만 남긴다. config의 "
@@ -603,6 +657,9 @@ def main():
             gate_alpha=gate_alpha, bld_alpha=args.bld_alpha,
             use_last_block_hook=not args.no_last_block_hook,
             raw_sigma_timestep=args.raw_sigma_timestep,
+            cond_scale=args.cond_scale,
+            cfg_scale=args.cfg_scale,
+            fixed_timestep=args.fixed_timestep,
         )
 
         if face is not None:

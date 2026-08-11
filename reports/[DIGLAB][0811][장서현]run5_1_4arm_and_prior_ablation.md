@@ -5,16 +5,19 @@
 **지난 미팅 (2026-08-11)** 
 - 4-arm(T∞/T15 × w=1/CRG2.0) 확장 평가 설계, 정량 50장×4seed·정성 8장×2버전
 - mcs2("CN=전체 내용 지정자") vs run5_1("CN=조향자, backbone prior 활성") 가설 검증
+- timestep 고정 시 mcs2는 결과 거의 안 변하고 run5_1은 크게 나빠지는지 확인(기존 timestep 미스 동작 검증)
 
 **합의 사항 → 상태**
 - [완료] 실험1: 4-arm 정량(50장×4seed) + 정성(8장×GT색/color 스케치)
 - [완료] 실험2: mcs2·run5_1 BLD 없음·CRG 없음 8장 비교
+- [추가, 완료] 실험3: mcs2·run5_1 timestep 고정 8장 비교
 
 **이번 결과**
 - 결과: 4-arm 전부 arm4(T15+CRG2.0)가 방향 지표 전 항목 최선(§1.1)
 - 결과 : T15/CRG2.0 일 때 정량평가 결과가 가장 좋지만, 정성평가에서는 오히려 T∞/CRG2.0가 더 자연스러워보임(§1.2)
 - 결과: run5_1 15epoch로 colorful sketch에 대해 생성했을 때, colorful sketch 무시하고 자연색 생성, run4(40epoch)는 원색 그대로 재현 => epoch 수 늘리면 color 재현할 것으로 예상(§1.3) 
 - 결과: run5_1은 BLD·CRG 없이도 matte 밖에 얼굴 구조 생성, mcs2는 격자 텍스처로 붕괴(§2)
+- 결과: timestep 고정 시 mcs2는 실험2와 거의 동일, run5_1은 전면 노이즈로 붕괴 — 스케줄 의존성 가설과 일치(§3)
 
 ---
 
@@ -47,7 +50,7 @@ run5_1, BLD 포함.
 - dE_unbraid는 반대로 단조 악화(+11.6%) 
 - lpips_unbraid는 arm4 최저(0.2154)로 최선, dE와 반대 방향
 - outlier, arm3(28) 대비 arm4(33) 소폭 증가 — 방향 정확도 개선과 outlier 억제 불일치
-* 이미지 하나당 4개 seed로 만든 결과들의 GT오차 평균을 구하고, 그 평균보다 1σ 이상 벗어난 (이미지, seed) 조합을 outlier로 셈
+>outlier : 이미지 하나당 4개 seed로 만든 결과들의 GT오차 평균을 구하고, 그 평균보다 1σ 이상 벗어난 (이미지, seed) 조합을 outlier로 셈
 
 ### 1.2 정성평가(GT sketch)
 
@@ -119,4 +122,30 @@ recolor 스케치로 정상 입력. 8장, seed42.
 - mcs2: matte 밖 영역, 8장 전부 동일한 격자(lattice) 텍스처로 붕괴. sketch가 달라도 배경
   결과 거의 동일.
 - 예측("run5_1 prior 강함 / mcs2 prior 침묵") 방향과 일치
+
+---
+
+## 3. 실험 3: timestep 스케줄 의존성 확인 (mcs2 vs run5_1)
+
+**지침**: mcs2는 timestep 버그로 CN이 timestep을 사실상 안 쓰게 됐다는 가설 — 그렇다면 추론
+시 모델에 넘기는 timestep 입력을 임의 상수로 고정해도 mcs2는 결과가 거의 안 변해야 하고,
+run5_1은 스케줄에 정상 의존하므로 결과가 크게 나빠져야 함.
+
+**방법**: 실험2와 동일 조건(BLD·CRG 없음, GT색 recolor 스케치, 8장, seed42)에 추가로
+`--fixed_timestep` 적용 — 실제 노이즈 제거 스케줄(scheduler.step)은 정상 진행, 모델
+(controlnet·transformer)에 넘기는 timestep 값만 상수로 고정(run5_1: 500, mcs2: 0.5,
+각자 학습 당시 관례의 중간값). 실험2 결과를 정상 스케줄 기준으로 재사용.
+
+### 3.1 결과 이미지 (고정 timestep)
+
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
+|---|---|---|---|---|---|---|---|---|
+| mcs2 | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1007.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1027.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1033.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1067.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1068.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1082.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1084.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/mcs2/42/CM_1172.png" width="100"> |
+| run5_1 | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1007.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1027.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1033.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1067.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1068.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1082.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1084.png" width="100"> | <img src="../outputs/0811/exp3_fixedT/run5_1/42/CM_1172.png" width="100"> |
+
+### 3.2 관찰, 해석
+
+- mcs2: 실험2(정상 스케줄) 결과와 거의 동일 — matte 밖 격자 텍스처, matte 안 헤어 구조 유지
+- run5_1: 실험2의 자연스러운 얼굴 구조가 완전히 무너져 전면 노이즈로 붕괴, 8장 전부 동일
+- 예측과 일치 — mcs2는 timestep 정보에 사실상 무관, run5_1은 정상적으로 스케줄에 의존
 
