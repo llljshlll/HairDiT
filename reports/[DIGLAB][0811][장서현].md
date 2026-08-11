@@ -13,7 +13,8 @@
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: 4-arm 전부 결합(T15+CRG2.0)이 방향 지표 전 항목 최선(§1.1)
-- 결과: run5_1 15epoch로 colorful sketch에 대해 생성했을 때, colorful sketch 무시하고 자연색 생성, run4(40epoch)는 원색 그대로 재현 => epoch 수 늘리면 재현할 것으로 예상(§1.3) 
+- 결과 : T15/CRG2.0 일 때 정량평가 결과가 가장 좋지만, 정성평가에서는 오히려 T∞/CRG2.0가 더 자연스러워보임(§1.2)
+- 결과: run5_1 15epoch로 colorful sketch에 대해 생성했을 때, colorful sketch 무시하고 자연색 생성, run4(40epoch)는 원색 그대로 재현 => epoch 수 늘리면 color 재현할 것으로 예상(§1.3) 
 - 결과: run5_1은 img·CRG 없이도 matte 밖에 자연스러운 얼굴 구조 생성, mcs2는 격자 텍스처로 붕괴(§2)
 
 ---
@@ -56,7 +57,7 @@ run5_1, face·matte·BLD 전부 포함.
 |---|---|---|---|---|---|---|---|---|
 | GT | <img src="../dataset/img/CM_1007.png" width="100"> | <img src="../dataset/img/CM_1027.png" width="100"> | <img src="../dataset/img/CM_1033.png" width="100"> | <img src="../dataset/img/CM_1067.png" width="100"> | <img src="../dataset/img/CM_1068.png" width="100"> | <img src="../dataset/img/CM_1082.png" width="100"> | <img src="../dataset/img/CM_1084.png" width="100"> | <img src="../dataset/img/CM_1172.png" width="100"> |
 | GT색 스케치 | <img src="../data/test/recolor_sketch/CM_1007.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1027.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1033.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1067.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1068.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1082.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1084.png" width="100"> | <img src="../data/test/recolor_sketch/CM_1172.png" width="100"> |
-| 1: T∞/w=1 | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1007.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1027.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1033.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1067.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1068.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1082.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1084.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1172.png" width="100"> |
+| 1: T∞/w=1 | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1007.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1027.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1033.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1067.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1068.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1082.png" width="100"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1084.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_w1/42/CM_1172.png" width="100"> |
 | 2: T15/w=1 | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1007.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1027.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1033.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1067.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1068.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1082.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1084.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_w1/42/CM_1172.png" width="100"> |
 | 3: T∞/CRG2.0 | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1007.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1027.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1033.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1067.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1068.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1082.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1084.png" width="100"> | <img src="../outputs/0811/eval8_gt/T_inf_crg2/42/CM_1172.png" width="100"> |
 | 4: T15/CRG2.0 | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1007.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1027.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1033.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1067.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1068.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1082.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1084.png" width="100"> | <img src="../outputs/0811/eval8_gt/T15_crg2/42/CM_1172.png" width="100"> |
@@ -78,7 +79,7 @@ epoch15), seed42.
 톤으로 생성 — CRG·densify 여부와 무관하게 일관.
 
 run5_1은 epoch15 체크포인트. `[DIGLAB][0730][장서현]
-run4_results.md` "Colorful sketch" 표를 보면, epoch30 이후에 색이 뚜렷해지는 관찰 존재 — epoch15
+run4_results.md`, reports/[0726]results_analysis.md, reports/[0718]results.md의 "Colorful sketch" 표를 보면, run2, 3, 4모두에서 epoch30 이후에 색이 뚜렷해지는 관찰 존재 — epoch15
 시점에는 색 조건 학습 미완성 가능성 있음. 40epoch까지 학습한 run4로 동일 4-arm 추가 생성(같은 raw
 스케치·seed42, T15 densify 스케치는 run5_1과 공유).
 
