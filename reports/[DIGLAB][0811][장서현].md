@@ -14,13 +14,13 @@
 - 결과: 4-arm 전부 arm4(T15+CRG2.0)가 방향 지표 전 항목 최선(§1.1)
 - 결과 : T15/CRG2.0 일 때 정량평가 결과가 가장 좋지만, 정성평가에서는 오히려 T∞/CRG2.0가 더 자연스러워보임(§1.2)
 - 결과: run5_1 15epoch로 colorful sketch에 대해 생성했을 때, colorful sketch 무시하고 자연색 생성, run4(40epoch)는 원색 그대로 재현 => epoch 수 늘리면 color 재현할 것으로 예상(§1.3) 
-- 결과: run5_1은 img·CRG 없이도 matte 밖에 자연스러운 얼굴 구조 생성, mcs2는 격자 텍스처로 붕괴(§2)
+- 결과: run5_1은 BLD·CRG 없이도 matte 밖에 얼굴 구조 생성, mcs2는 격자 텍스처로 붕괴(§2)
 
 ---
 
 ## 1. 실험 1: 4-arm 평가
 
-**지침**: "4-arm" = T∞/T15(densify) × w=1/CRG2.0(guidance) 조합 4종 비교.
+"4-arm" = T∞/T15(densify) × w=1/CRG2.0(guidance) 조합 4종 비교.
 
 | arm | densify | guidance | 목적 |
 |---|---|---|---|
@@ -32,7 +32,7 @@
 ### 1.1 정량평가
 
 **방법**: 50장(GT색 recolor 스케치 T∞ / SHS T15 densify 스케치) × seed{1,2,3,42} ×
-run5_1, face·matte·BLD 전부 포함. 
+run5_1, BLD 포함. 
 
 | arm | GT오차[deg] | coherence | seed불일치[deg] | outlier[/200] | dE_unbraid | lpips_unbraid |
 |---|---:|---:|---:|---:|---:|---:|
@@ -51,6 +51,8 @@ run5_1, face·matte·BLD 전부 포함.
 ### 1.2 정성평가(GT sketch)
 
 **방법**: 기존 8장 sketch 4-arm 각 1회 생성, seed42.
+
+결과 : 3: T∞/CRG2.0가 제일 자연스러워보임
 
 | | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
 |---|---|---|---|---|---|---|---|---|
