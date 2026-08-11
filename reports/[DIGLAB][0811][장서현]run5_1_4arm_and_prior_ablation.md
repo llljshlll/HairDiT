@@ -47,7 +47,7 @@ run5_1, BLD 포함.
 - dE_unbraid는 반대로 단조 악화(+11.6%) 
 - lpips_unbraid는 arm4 최저(0.2154)로 최선, dE와 반대 방향
 - outlier, arm3(28) 대비 arm4(33) 소폭 증가 — 방향 정확도 개선과 outlier 억제 불일치
-* 이미지 하나당 4개 seed로 만든 결과들의 GT오차 평균을 구하고, 그 평균보다 1σ 이상 벗어난 (이미지, seed) 조합을 outlier로 셈
+>outlier : 이미지 하나당 4개 seed로 만든 결과들의 GT오차 평균을 구하고, 그 평균보다 1σ 이상 벗어난 (이미지, seed) 조합을 outlier로 셈
 
 ### 1.2 정성평가(GT sketch)
 
