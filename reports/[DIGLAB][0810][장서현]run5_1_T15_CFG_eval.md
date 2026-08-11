@@ -1,22 +1,22 @@
-# run5_1 T15 CFG eval
+# run5_1 T15 CRG eval
 
 ## 최상단 요약 (10줄 이내)
 
 **지난 미팅 (2026-08-10, 교수님 지시)** — 키워드 3줄
 - run5_1 × T15 densify(추론 시점만) × 50장 × seed 4개 테스트
 - 50장 배치 기존 8장 dE·lpips 재계산
-- CFG {7.5→5.0→3.5} 스윕 × seed42 × 문제 이미지 2장 테스트
+- CRG {7.5→5.0→3.5} 스윕 × seed42 × 문제 이미지 2장 테스트
 
 **합의 사항 → 상태**
 - [완료] T15 densify 50장×4seed 추론·지표 계산(§1)
 - [완료] 기존 8장 dE·lpips 재계산(§2)
-- [완료] CFG 구현·스윕(§3)
+- [완료] CRG 구현·스윕(§3)
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: T15 densify, 50장 중 48장 개선, seed 불일치 13.14°→12.32°(-6.2%)(§1)
-- 결과: CFG 2.0에서 GT 오차 최선(14.32°/14.66°) — 이 프로젝트가 쓰는 SD3.5 Medium
+- 결과: CRG 2.0에서 GT 오차 최선(14.32°/14.66°) — 이 프로젝트가 쓰는 SD3.5 Medium
   자체 기본값(5.0)보다도 낮은 지점(§3), 두 이미지의 방향 노이즈 눈에 띄게 완화
-- 다음: CFG 1.5~2.0 사이 세분화 스윕, 여러 이미지에 대해 시도, 정량평가 진행
+- 다음: CRG 1.5~2.0 사이 세분화 스윕, 여러 이미지에 대해 시도, 정량평가 진행
 
 ---
 
@@ -125,7 +125,7 @@ seed42 결과:
 
 ---
 
-## 3. CFG {7.5→5.0→3.5} × seed42 × CM_1027/CM_1067
+## 3. CRG {7.5→5.0→3.5} × seed42 × CM_1027/CM_1067
 
 ### 3-1. 구현
 
@@ -138,6 +138,12 @@ w = guidance scale. SD1.x/SD2.x 등 구세대 text-to-image 모델은 w≈7.5가
 
 이 모델은 텍스트 프롬프트가 없고 sketch·matte를 ControlNet residual로 주입하는
 구조라, "조건 있음/없음"을 다음과 같이 대응시켰다.
+
+이 대응 관계를 반영해 이 프로젝트에서는 이 기법을 **ControlNet Residual Guidance(CRG)**라
+부른다. 위 CFG와 수식(`v = v_uncond + w·(v_cond − v_uncond)`)·v_cond/v_uncond 차이를
+적용하는 메커니즘은 완전히 동일하고, 다만 그 조절 대상이 텍스트 조건이 아니라
+ControlNet residual 주입이라는 점을 이름에 명시했다.
+
 - **v_cond**: 기존 추론과 동일 — ControlNet이 sketch·matte에서 뽑은 residual을 프리즌
   SD3.5 transformer에 주입해 예측
 - **v_uncond**: 그 residual을 아예 주지 않고 프리즌 transformer 혼자 예측
@@ -159,7 +165,7 @@ v_uncond는 모델이 학습 중 한 번도 보지 못한 입력이다 — 이 �
 
 ### 3-2. 발견 — matte 밖 프리즌 prior의 얼굴 생성
 
-CFG 검증 중 BLD 없이 CM_1027 순수 생성 확인 결과, matte=0(비-헤어) 영역에 눈·코·입
+CRG 검증 중 BLD 없이 CM_1027 순수 생성 확인 결과, matte=0(비-헤어) 영역에 눈·코·입
 출현(`outputs/0810/cfg_sweep/none/CM_1027.png`). `FlowMatchingLoss`(`outside_weight=0.0`)의
 matte 밖 supervision 배제 — 프리즌 SD3.5 prior의 무제약 출력.
 
@@ -167,13 +173,13 @@ BLD 매 스텝 블렌딩이 matte 안쪽 헤어 생성에도 개입 — 동일 s
 대조 시 matte 안쪽 픽셀 평균 절대차 **9.4/255**(std 12.7). §1·§2는 이 결과를
 반영해 전량 BLD 조건으로 생성.
 
-| 입력 스케치 | matte | BLD 없이 본 결과(CFG 없음, seed42) |
+| 입력 스케치 | matte | BLD 없이 본 결과(CRG 없음, seed42) |
 |---|---|---|
 | <img src="../data/test/recolor_sketch/CM_1027.png" width="160"> | <img src="../data/test/matt/CM_1027.png" width="160"> | <img src="../outputs/0810/cfg_sweep/none/CM_1027.png" width="160"> |
 
 ### 3-3. 결과 (seed42)
 
-| CFG | CM_1027 GT오차 | CM_1027 coherence | CM_1067 GT오차 | CM_1067 coherence |
+| CRG | CM_1027 GT오차 | CM_1027 coherence | CM_1067 GT오차 | CM_1067 coherence |
 |---|---:|---:|---:|---:|
 | 없음(기존) | 16.67 | 0.731 | 16.64 | 0.748 |
 | 1.5 | 14.91 | 0.782 | 14.95 | 0.779 |
@@ -189,7 +195,7 @@ coherence, CM_1067은 전 구간 거의 단조 증가(0.748→0.830→0.826)지�
 올릴수록 결 선명도는 계속 오르지만 색·경계 아티팩트가 함께 커짐.
 2.0에서 두 이미지 모두 기존에 있던 노이즈 뚜렷이 완화
 
-| CFG | CM_1027 (GT오차/coh) | CM_1067 (GT오차/coh) |
+| CRG | CM_1027 (GT오차/coh) | CM_1067 (GT오차/coh) |
 |---|---|---|
 | 없음(기존) — 16.67/0.731, 16.64/0.748 | <img src="../outputs/0810/cfg_sweep_composited/none/CM_1027.png" width="160"> | <img src="../outputs/0810/cfg_sweep_composited/none/CM_1067.png" width="160"> |
 | 1.5 — 14.91/0.782, 14.95/0.779 | <img src="../outputs/0810/cfg_sweep_composited/1.5/CM_1027.png" width="160"> | <img src="../outputs/0810/cfg_sweep_composited/1.5/CM_1067.png" width="160"> |
@@ -200,12 +206,12 @@ coherence, CM_1067은 전 구간 거의 단조 증가(0.748→0.830→0.826)지�
 
 ### 3-4. 해석
 
-최적점 CFG≈2.0, 두 이미지 일치. uncond 분기 미학습(§3-1) 고려 시 SD3.5 Medium
+최적점 CRG≈2.0, 두 이미지 일치. uncond 분기 미학습(§3-1) 고려 시 SD3.5 Medium
 자체 기본값(5.0)도 과도, 이 아키텍처의 적정 구간은 그보다 낮음. 다음 스윕:
 1.5~2.0 사이 세분화(1.75 등) 제안.
 
 ---
 
 ## 4. 한계 / 다음
-- CFG 표본 seed42·이미지 2장·1 seed — 확장 시 판단 안정화
+- CRG 표본 seed42·이미지 2장·1 seed — 확장 시 판단 안정화
 - T15 densify, dose-response 성격 — 낮은 threshold(T12) 확장 시 개선폭 확인 가능
