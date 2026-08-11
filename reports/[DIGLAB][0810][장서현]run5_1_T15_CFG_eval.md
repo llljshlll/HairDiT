@@ -10,7 +10,7 @@
 **합의 사항 → 상태**
 - [완료] T15 densify 50장×4seed 추론·지표 계산(§1)
 - [완료] 기존 8장 dE·lpips 재계산(§2)
-- [완료] true CFG 구현·스윕(§3)
+- [완료] CFG 구현·스윕(§3)
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: T15 densify, 50장 중 48장 개선, seed 불일치 13.14°→12.32°(-6.2%)(§1)
@@ -29,9 +29,7 @@
 -- CFG {7.5→5.0→3.5} 스윕 × seed42 × 문제의 이미지 두장 테스트
 ```
 
-체크포인트: `checkpoints/run5_1_noisegate/epoch_15_infer.pth`
-(config `configs/run5_1_noisegate_phase1.yaml`), 20-step 샘플링, BLD
-(`--bld_mode full --bld_soft_steps 18 --pixel_blend --pixel_blend_alpha 0.75`) 공통.
+체크포인트: `checkpoints/run5_1_noisegate/epoch_15_infer.pth`, 20-step 샘플링, BLD 적용 공통.
 
 ---
 
@@ -80,8 +78,8 @@ GT 오차 -2.5%, seed 불일치 -6.2%, coherence 상승.
 
 ### 1-4. 한계
 
-- outlier 개수(4-seed 평균 대비 1σ 초과) 미계산 — densify가 오차 크기를 낮추는
-  효과인지 outlier 자체를 없애는 효과인지 구분 필요
+- outlier 개수(4-seed 평균 대비 1σ 초과): T∞ 37/200 → T15 33/200(-10.8%) — 오차 크기뿐
+  아니라 outlier 발생 빈도도 소폭 감소
 - dE_unbraid, T∞→T15에서 소폭 상승(4.578→4.655, +1.7%) — 변화폭 작아 표본 n=50
   하나만으로는 판단 보류
 
@@ -125,16 +123,10 @@ CM_1007만 포함, 나머지 7장 부재 — 배치 내 추출 불가로 배치 
 
 seed42 결과:
 
-| image | GT | 생성 결과(seed42) |
-|---|---|---|
-| CM_1007 | <img src="../dataset/img/CM_1007.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1007.png" width="130"> |
-| CM_1027 | <img src="../dataset/img/CM_1027.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1027.png" width="130"> |
-| CM_1033 | <img src="../dataset/img/CM_1033.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1033.png" width="130"> |
-| CM_1067 | <img src="../dataset/img/CM_1067.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1067.png" width="130"> |
-| CM_1068 | <img src="../dataset/img/CM_1068.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1068.png" width="130"> |
-| CM_1082 | <img src="../dataset/img/CM_1082.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1082.png" width="130"> |
-| CM_1084 | <img src="../dataset/img/CM_1084.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1084.png" width="130"> |
-| CM_1172 | <img src="../dataset/img/CM_1172.png" width="130"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1172.png" width="130"> |
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
+|---|---|---|---|---|---|---|---|---|
+| GT | <img src="../dataset/img/CM_1007.png" width="110"> | <img src="../dataset/img/CM_1027.png" width="110"> | <img src="../dataset/img/CM_1033.png" width="110"> | <img src="../dataset/img/CM_1067.png" width="110"> | <img src="../dataset/img/CM_1068.png" width="110"> | <img src="../dataset/img/CM_1082.png" width="110"> | <img src="../dataset/img/CM_1084.png" width="110"> | <img src="../dataset/img/CM_1172.png" width="110"> |
+| 생성 결과(seed42) | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1007.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1027.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1033.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1067.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1068.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1082.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1084.png" width="110"> | <img src="../outputs/0810/eval8_orig_face/run5_1/42/CM_1172.png" width="110"> |
 
 ---
 
@@ -196,16 +188,7 @@ coherence, 스케일 증가에 따라 단조 증가. GT 오차는 두 이미지 
 
 ---
 
-## 4. 코드 변경
-
-- `infer_custom.py`: `cfg_scale` 파라미터·`--cfg_scale` CLI 옵션 추가
-- `densify_shs.py colored`로 50장 T15 세트 생성
-- 신규 스크립트: `prep_densify_t15_eval50.py`, `quant50_T15_vs_Tinf.py`,
-  `eval8_orig_quant.py`
-
----
-
-## 5. 한계 / 다음
+## 4. 한계 / 다음
 
 - 지난 세션 run5_1/run6_1/run6_2 50장 비교, §3-2 발견(BLD가 matte 안쪽 생성에도
   개입) 적용 여부 재작업 필요 판단 🔴
