@@ -149,3 +149,26 @@ run5_1은 스케줄에 정상 의존하므로 결과가 크게 나빠져야 함.
 - run5_1: 실험2의 자연스러운 얼굴 구조가 완전히 무너져 전면 노이즈로 붕괴, 8장 전부 동일
 - 예측과 일치 — mcs2는 timestep 정보에 사실상 무관, run5_1은 정상적으로 스케줄에 의존
 
+---
+
+## 4. 실험 4: 스텝 수 의존성 확인 (mcs2 vs run5_1)
+
+**지침**: 실험3(timestep 값 고정)의 후속 — mcs2가 timestep 값 자체를 안 쓴다면, 노이즈에서
+x0까지 여러 스텝에 걸쳐 반복 정제하는 것도 큰 의미가 없을 수 있음. 1-step vs 정상 20-step
+비교로 확인.
+
+**방법**: 실험2·3과 동일 조건(BLD·CRG 없음, GT색 recolor 스케치, 8장, seed42),
+
+### 4.1 결과 이미지 (1-step)
+
+| | CM_1007 | CM_1027 | CM_1033 | CM_1067 | CM_1068 | CM_1082 | CM_1084 | CM_1172 |
+|---|---|---|---|---|---|---|---|---|
+| mcs2 | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1007.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1027.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1033.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1067.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1068.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1082.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1084.png" width="100"> | <img src="../outputs/0811/exp4_1step/mcs2/42/CM_1172.png" width="100"> |
+| run5_1 | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1007.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1027.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1033.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1067.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1068.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1082.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1084.png" width="100"> | <img src="../outputs/0811/exp4_1step/run5_1/42/CM_1172.png" width="100"> |
+
+### 4.2 관찰, 해석
+
+- mcs2: run5_1보다는 유사하지만 완전히 똑같진 않음
+- run5_1: 1-step은 이목구비·결 디테일 없이 뭉개진 흐릿한 형태로 크게 저하, 20-step 대비
+  뚜렷이 나빠짐
+
