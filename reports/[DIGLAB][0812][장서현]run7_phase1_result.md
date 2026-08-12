@@ -38,16 +38,9 @@
 ## phase1→2 선정 기준
 ### 정량지표
 
-> 방법론은 `[DIGLAB][0810][장서현]run5_1_quant_eval.md` §3.0과 동일(`infer_custom.py
-> --recolor_from_gt`, `orientation_metric.py` structure tensor sigma_i=3/erode_px=6,
-> `eval_metrics.py`의 compute_delta_e_hue/hair_masked_lpips). seed `{1,2,3,42}`, 20 step.
-> epoch5/10/15는 이번 정량 추론 대상에서 제외됨(quant50 pool이 epoch20부터 추론) —
-> run7_phase1의 epoch5/10/15는 resume 이전 run5_1과 가중치가 동일하므로 그
-> 리포트(§3.1/§3.2, epoch15 n=50: GT err 15.29° / coh 0.779 / seed_dis 13.15±4.58 /
-> dE_unbraid 5.2417 / lpips_unbraid 0.2497)로 대체 참고 가능하나, **거기 쓰인 50장 pool이
-> 이번 `_pool50`과 동일한 이미지 집합인지 확인되지 않아 직접 비교는 보류**.
+> 방법론은 `[DIGLAB][0810][장서현]run5_1_quant_eval.md` §3.0과 동일
 
-#### n=50 (quant50 pool, `dataset/unbraid` GT, `python scripts/eval/quant50_run7.py --epochs 20 25 30 35 40`)
+#### n=50 
 
 | epoch | GT 오차 평균 [deg] | coherence | seed 불일치 [deg] | dE_unbraid | lpips_unbraid |
 |---:|---:|---:|---:|---:|---:|
@@ -62,16 +55,15 @@
 방향(epoch가 늘수록 개선)으로 움직여 — `run5_1_quant_eval.md` §3.3에서 관찰된 "방향 vs
 색/구조 지표 상충"이 이번엔 **재현되지 않음**.
 
-**선정 기준(교수님 지시 ④) 적용**: 방향 지표 기준으로 epoch40이 최선이고 색/구조 지표도
-epoch40에서 최선이라 상충 없이 **epoch40이 방향 지표 최적점**. 다만 이번 평가는 epoch20~40
-구간만 다뤄 epoch5~15 구간과의 비교는 위 주석의 한계 하에서만 가능.
+**선정 기준 적용**: 방향 지표 기준으로 epoch40이 최선이고 색/구조 지표도
+epoch40에서 최선이라 상충 없이 **epoch40이 방향 지표 최적점**. 
 
 **epoch35 vs epoch40 — 정성지표와 동일하게 정량지표도 유의미한 차이 없음.**
 epoch35→40 변화폭이 seed 불일치의 표준편차(±4.11°)보다 훨씬 작음(GT 오차 −0.07°(−0.5%),
 seed 불일치 −0.25°(−2.1%), dE −0.12(−5%), lpips −0.0018(−0.8%)) — 노이즈 범위 안.
 epoch30→35 구간의 개선폭(GT 오차 −0.18°, seed 불일치 −0.67°, dE −0.23)이 35→40보다
 뚜렷이 컸던 것과 비교하면 개선이 이미 epoch35 부근에서 수렴한 것으로 판단됨. →
-**정성·정량 모두 epoch35=epoch40이라, phase2는 epoch35에서 진행해도 무방.**
+**정성·정량 모두 epoch35=epoch40이라, phase2는 epoch35에서 진행해도 무방함(하지만 phase2는 epoch 40에서 진행).**
 
 ### 정성지표
 epoch5~40까지 정성지표
