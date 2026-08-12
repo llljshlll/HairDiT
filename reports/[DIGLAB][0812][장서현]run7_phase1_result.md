@@ -58,13 +58,6 @@
 **선정 기준 적용**: 방향 지표 기준으로 epoch40이 최선이고 색/구조 지표도
 epoch40에서 최선이라 상충 없이 **epoch40이 방향 지표 최적점**. 
 
-**epoch35 vs epoch40 — 정성지표와 동일하게 정량지표도 유의미한 차이 없음.**
-epoch35→40 변화폭이 seed 불일치의 표준편차(±4.11°)보다 훨씬 작음(GT 오차 −0.07°(−0.5%),
-seed 불일치 −0.25°(−2.1%), dE −0.12(−5%), lpips −0.0018(−0.8%)) — 노이즈 범위 안.
-epoch30→35 구간의 개선폭(GT 오차 −0.18°, seed 불일치 −0.67°, dE −0.23)이 35→40보다
-뚜렷이 컸던 것과 비교하면 개선이 이미 epoch35 부근에서 수렴한 것으로 판단됨. →
-**정성·정량 모두 epoch35=epoch40이라, phase2는 epoch35에서 진행해도 무방함(하지만 phase2는 epoch 40에서 진행).**
-
 ### 정성지표
 epoch5~40까지 정성지표
 ## 결과 사진
@@ -99,3 +92,11 @@ epoch5~40까지 정성지표
 | CM_1082 | <img src="../dataset/test/img/CM_1082.png" width="70"> | <img src="../dataset/test/sketch/CM_1082.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch20/CM_1082.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch25/CM_1082.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch30/CM_1082.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch35/CM_1082.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch40/CM_1082.png" width="70"> |
 | CM_1084 | <img src="../dataset/test/img/CM_1084.png" width="70"> | <img src="../dataset/test/sketch/CM_1084.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch20/CM_1084.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch25/CM_1084.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch30/CM_1084.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch35/CM_1084.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch40/CM_1084.png" width="70"> |
 | CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="70"> | <img src="../dataset/test/sketch/CM_1172.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch20/CM_1172.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch25/CM_1172.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch30/CM_1172.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch35/CM_1172.png" width="70"> | <img src="../outputs/0812/run7_phase1/color/42/epoch40/CM_1172.png" width="70"> |
+
+
+**epoch35 vs epoch40 — 정성지표와 동일하게 정량지표도 유의미한 차이 없음.**
+epoch35→40 변화폭이 seed 불일치의 표준편차(±4.11°)보다 훨씬 작음(GT 오차 −0.07°(−0.5%),
+seed 불일치 −0.25°(−2.1%), dE −0.12(−5%), lpips −0.0018(−0.8%)) — 노이즈 범위 안.
+epoch30→35 구간의 개선폭(GT 오차 −0.18°, seed 불일치 −0.67°, dE −0.23)이 35→40보다
+뚜렷이 컸던 것과 비교하면 개선이 이미 epoch35 부근에서 수렴한 것으로 판단됨. →
+**정성·정량 모두 epoch35=epoch40이라, phase2는 epoch35에서 진행해도 무방함(하지만 phase2는 epoch 40에서 진행).**
