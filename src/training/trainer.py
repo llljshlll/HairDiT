@@ -797,8 +797,16 @@ class Trainer:
 
     @torch.no_grad()
     def _perceptual_validate(self) -> dict:
-        """held-out 16(unbraid)+16(braid) 고정셋에 EMA 가중치로 생성 후 품질 지표 측정
+        """held-out 16(unbraid)+16(braid) 고정셋에 raw(학습 중) 가중치로 생성 후 품질 지표 측정
         ([0724] planning §4-2). 32장을 한 번에 배치 샘플링(순차 대비 대폭 단축)한다.
+
+        [0812] EMA 스왑 제거 — 이 지표로 채택 epoch을 고르는데, 실제 채택·inference는
+        _infer.pth(=raw only)를 쓴다. 측정 대상과 채택 대상이 달라선 안 된다. 게다가
+        EMAModel은 warmup/bias correction이 없고 decay=0.9999(수렴에 1/(1-decay)=10,000 step
+        필요)인데 phase1은 7,480 / phase2는 5,000 step뿐이라, phase2 종료 시점에도 EMA의
+        0.9999^5000 = 60.7%가 여전히 시작 가중치다 — braid 학습 진행을 심하게 과소보고한다.
+        (0725_phase2_issues.md §2 "남은 의문"으로 남아 있던 항목)
+        이 변경으로 EMA는 어디에서도 쓰이지 않는다(inference·채택·resume_from 전부 raw).
 
         scripts/eval_metrics.py의 공식(CIEDE2000 shade-정규화 평균색 ΔE, Canny edge 기반
         IoU, alex-net LPIPS)을 그대로 재사용해 최종 리포트 수치와 일치시킨다.
@@ -816,11 +824,8 @@ class Trainer:
         from scripts.infer_custom import decode_hair, run_sampling_batched
 
         cn = self.accelerator.unwrap_model(self.controlnet)
-        # EMA API는 apply_to(model)/restore_to(model, original) — copy_to()는 없음(ema.py:52-62).
-        # 원본 스냅샷은 호출자가 직접 떠야 한다.
-        orig = {k: v.detach().clone() for k, v in cn.named_parameters() if v.requires_grad}
+        # raw 가중치 그대로 평가하므로 EMA 스왑도, 원본 스냅샷/복원도 필요 없다(위 docstring).
         was_training = cn.training
-        self.ema.apply_to(cn)
         cn.eval()
 
         try:
@@ -865,7 +870,6 @@ class Trainer:
                 "edge_iou_braid": _safe_mean(iou_br),
             }
         finally:
-            self.ema.restore_to(cn, orig)
             if was_training:
                 cn.train()
 
