@@ -1,0 +1,83 @@
+# configs/run7_phase2_rawstart.yaml — run7 phase2 재학습 (raw 시작 수정판)
+#
+# [0812] 1차 run7_phase2 실패 원인 = EMA 시작 (LR 아님).
+#   resume_from이 raw 로드 후 EMA shadow로 덮어쓰고 있었다(trainer.py e623ab0, 0725 §2에서
+#   제거했으나 커밋 유실 → 재발). 실측: controlnet_blocks(조건 주입, zero-init) ema/raw=0.396x
+#   → 스케치 조건 신호가 40% 세기로 시작 → 색 조건화 즉시 붕괴.
+#   trainer.py에서 EMA 덮어쓰기 제거함(재발 방지 주석 포함). 이제 resume_from = raw only.
+#
+#   ⚠️ LR은 2.0e-5 그대로 둔다. 아래 헤더에 "학습률 5e-6"이라 적혀 있으나, mcs2(6월, raw 시작,
+#   2e-5)가 양호했으므로 2e-5는 검증된 값이다. EMA 수정 단일 변수만 바꿔 원인을 확정한다.
+#
+# configs/run7_phase2.yaml — run7 phase2: 최종 학습, unbraid+braid replay finetune (40 epoch)
+#
+# 근거: reports/[DIGLAB][0812][장서현]final_retrain_plan.md
+#   - curriculum+replay: reports/[0721]loss_design_rationale.md의 8:8 stratified 설정 그대로
+#     (확인 사항 2) — dataset: replay, StratifiedBatchSampler가 매 배치 unbraid 8 + braid 8
+#   - loss: lpips는 phase1과 동일하게 noise-gate·w_lpips=0.002 유지(phase1과 다른 값 아님,
+#     확인 사항 1·9). edge는 phase2에서만 켜짐(w_edge=0.05, mcs2 parity 유지, 교수님 확정)
+#   - 학습률 5e-6 (확인 사항 2)
+#
+# scale_sync_phase2.yaml을 템플릿으로 쓰되 두 가지를 고쳤다:
+#   ① loss_weights.lpips: 0.1 → 0.002  (0.1은 0724 scale-sync 재보정 *이전* 값 — 그대로 쓰면
+#      phase1(0.002) 대비 50배 뛴다. run4 이후 전 계열이 0.002를 쓰므로 phase2도 맞춘다.)
+#   ② lpips_gate: noise 명시 + lpips_warmup_frac 삭제 (기본값이 "noise"라 값은 안 바뀌지만,
+#      원본엔 안 쓰는 lpips_warmup_frac=0.3이 남아있어 혼동 소지가 있었다 — final_retrain_plan.md
+#      구버전에서 지적된 부분, 정리)
+base: configs/base.yaml
+
+# phase1(run7_phase1)과 동일 아키텍처 — resume_from(weights-only)이 가중치 shape 일치를
+# 전제하므로 기본값에 의존하지 않고 명시.
+model:
+  zero_matte_cond: false
+  zero_matte_feat: false
+  zero_raw_matte: false
+  num_extra_conditioning_channels: 16
+  matte_bias_zero_init: true
+  use_matte_scale: true
+
+training:
+  phase: finetune             # ⚠️ 필수! edge 활성화 + lpips noise-gate 유지(phase1과 게이트 방식은 동일)
+  dataset: replay              # unbraid_train(3000) + braid_train(1000), 8:8 stratified
+  sample_seed: 0                # 8:8 sampler 셔플 seed (재현성)
+  epochs: 40
+  batch_size: 16                # batch_sampler(8+8)가 실질 결정하지만 명시 유지
+  learning_rate: 2.0e-5
+  warmup_steps: 500
+  mode: forward
+  schedule: all
+  gate_alpha: 1.0
+  resume: checkpoints/run7_phase2_rawstart/epoch_5.pth   # [0812] epoch5 중간점검 후 재개용 (동일 run 이어가기 = optimizer/lr_scheduler/EMA/step 전체 복원이 올바름)
+                                 #    optimizer/lr_scheduler state까지 같이 복원되면 5e-6 LR이
+                                 #    무시되고 phase1 스케줄 잔여분이 이어짐)
+  # 🔴 미확정 — final_retrain_plan.md 확인 사항 4: "phase1→phase2로 넘길 체크포인트는
+  #    perceptual val 로그(dE_unbraid/lpips_unbraid) 보고 사후 결정, 무조건 epoch40 아님."
+  #    아래는 run7_phase1이 끝까지(epoch40) 간다는 가정의 임시값이다. run7_phase1의 매 epoch
+  #    perceptual val 로그를 검토한 뒤 실제 채택 epoch으로 바꿔서 실행할 것.
+  resume_from: null   # resume(위)이 가중치를 덮으므로 불필요
+
+  loss_weights:
+    flow: 1.0
+    lpips: 0.002               # phase1과 동일 (0.1 아님 — 위 파일 헤더 참고)
+    edge: 0.05                 # mcs2 parity 유지 (교수님 확정, 올리지 않음)
+    lpips_noise_cutoff: 0.7
+    lpips_gate: noise           # 명시 (기본값과 동일하지만 혼동 방지)
+    scale_sync: true
+    s_min: 20.0
+    s_max: 120.0
+
+checkpointing:
+  output_dir: checkpoints/run7_phase2_rawstart/
+  eval_every: 5                # flow val (참고용)
+  perceptual_every: 1          # perceptual val 매 epoch
+  save_every: 5
+
+# ⚠️ 판정에 best.pth를 쓰지 말 것 — best.pth 자동저장은 제거됨. 최종 채택 epoch도 phase1과
+#   동일하게 epoch_N.pth들의 perceptual val 로그를 보고 사후 수동 선정한다.
+
+# 착수 직후 필수 확인:
+#   - resume_from 직후 로그에 "Loaded Phase 1 weights from ..." / "Loaded Phase 1 EMA weights
+#     from ..." 둘 다 출력되는지 (EMA 없으면 후자는 안 뜸 — phase1 체크포인트에 EMA가 있는지 확인)
+#   - braid_train/braid_test 데이터셋이 서버에 준비돼 있는지 (로컬 dataset/에는 braid 없음,
+#     final_retrain_plan.md 관련 확인 사항)
+#   - step ~10: lpips_active_fraction ≈ 0.40 ± 0.03 (phase1과 동일 게이트)
