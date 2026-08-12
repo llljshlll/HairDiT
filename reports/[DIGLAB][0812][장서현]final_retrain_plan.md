@@ -37,7 +37,7 @@ run4(40epoch) × colorful sketch(원본 색 스케치, GT 재채색 없음) 비�
 
 리스크:
 - 우리 null 임베딩은 cond/uncond에 동일하게 쓰임. SD3.5 CFG는 cond 분기(프롬프트 임베딩)와 uncond 분기(빈 프롬프트를 텍스트 인코더에 통과시킨 실제 임베딩)의 텍스트 입력이 서로 다른 값인데, 우리는 이 두 분기(v_cond/v_uncond)에 같은 null 임베딩 하나를 씀 — dropout을 넣으면 이 파라미터가 "residual과 협업"·"residual 없이 단독" 두 역할을 동시에 만족해야 해 조건부 생성 품질이 오히려 깎일 수 있음
-- `_perceptual_validate`는 CRG 미사용 기준으로 찍힘 — dropout으로 CRG 사용을 전제하면 체크포인트 사후 선정(확인 사항 5) 기준과 어긋남
+- `_perceptual_validate`는 CRG 미사용 기준으로 찍힘 — dropout으로 CRG 사용을 전제하면 체크포인트 사후 선정(확인 사항 4) 기준과 어긋남
 - CRG는 dropout 없이도 이미 효과가 어느정도 실측됐고(`[DIGLAB][0810]` §3-3, CRG 2.0에서 GT오차 16.67→14.32°/16.64→14.66°), 얻는 게 불확실한 반면 비용(재학습)은 확정적임. 
 - 만약 dropout 진행한다면 A안으로 진행
 
@@ -45,17 +45,17 @@ run4(40epoch) × colorful sketch(원본 색 스케치, GT 재채색 없음) 비�
 1. loss 적용
 lpips를 step말고 timestep 기준으로, 노이즈 단계 30% 이후부터 적용(noise-gate)  
 phase2에서도 동일 적용으로, timestep 기준, 노이즈 30% 이후부터 적용, edge loss는 그대로 적용  
-두 phase 공통:  
-    L_flow = Σ(m̃⊙(v_pred-v_target)²) / (‖m̃‖₁+ε)   — matte(헤어 면적) L1으로 정규화, phase 1, 2에 동일 정의
-    s = clamp(numel(v_pred)/‖matte_latent‖₁, 20, 120)  (scale-sync, flow 항을 lpips/edge와 gradient 스케일 맞춤용, phase 무관 동일 적용)
-    σ 샘플링: logit-normal + shift=3.0 (SD3.5 사전학습 관례 상속, phase 무관 동일)  
-
+두 phase 공통:    
+- L_flow = Σ(m̃⊙(v_pred-v_target)²) / (‖m̃‖₁+ε)   — matte(헤어 면적) L1으로 정규화, phase 1, 2에 동일 정의  
+- s = clamp(numel(v_pred)/‖matte_latent‖₁, 20, 120)  (scale-sync, flow 항을 lpips/edge와 gradient 스케일 맞춤용, phase 무관 동일 적용)  
+- σ 샘플링: logit-normal + shift=3.0 (SD3.5 사전학습 관례 상속, phase 무관 동일)   
+```
 phase1 : L_total = w_flow·(L_flow/s) + w_lpips·1[σ≤0.7]·L_LPIPS  
     = 1.0·(L_flow/s) + 0.002·1[σ≤0.7]·L_LPIPS   (w_edge=0, edge 없음)  
   
 phase2 : L_total = w_flow·(L_flow/s) + w_lpips·1[σ≤0.7]·L_LPIPS + w_edge·L_edge  
     = 1.0·(L_flow/s) + 0.002·1[σ≤0.7]·L_LPIPS + 0.05·L_edge  
-
+```
 
 2. curriculum + replay 적용  
 phase2에서 reports/[0721]loss_design_rationale.md ## 커리큘럼 러닝 방식 선택 (Rehearsal / Replay) 에 나왔던 설정 그대로 진행(phase2에서 braid:unbraid=8:8로 샘플링하여 학습)  
