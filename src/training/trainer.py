@@ -281,13 +281,24 @@ class Trainer:
             ckpt = torch.load(resume_from, map_location="cpu", weights_only=True)
             self.controlnet.load_state_dict(ckpt["controlnet"])
             self.accelerator.print(f"Loaded Phase 1 weights from {resume_from}")
-            # best.pth는 EMA 기준 perceptual val로 선정되므로, EMA shadow가 있으면 그
-            # 값으로 다시 덮어써 phase2 시작 가중치를 선정 근거와 일치시킨다([0724] planning §6).
-            # EMAModel.state_dict()의 shadow는 named_parameters(requires_grad=True) 부분집합이라
-            # strict=False로 로드(버퍼/고정 파라미터는 그대로 둠).
-            if "ema" in ckpt:
-                self.controlnet.load_state_dict(ckpt["ema"]["shadow"], strict=False)
-                self.accelerator.print(f"Loaded Phase 1 EMA weights from {resume_from}")
+            # ⚠️ 여기에 EMA shadow 덮어쓰기를 (다시) 넣지 말 것.
+            #
+            # 과거 e623ab0([0724] planning §6)이 "best.pth는 EMA 기준 perceptual val로 선정되므로
+            # 시작 가중치도 EMA로 맞춘다"는 이유로 `if "ema" in ckpt: load_state_dict(ckpt["ema"]
+            # ["shadow"], strict=False)`를 넣었다가, 0725_phase2_issues.md §2에서 "심각" 버그로
+            # 판정되어 제거했다. 그 제거가 커밋되지 않아 유실 → run7_phase2(0812)에서 재발했다.
+            #
+            # 근거(0812 실측, run7_phase1/epoch_40.pth의 raw vs ema shadow 비교):
+            #   controlnet_blocks(조건 신호 주입, zero-init) ‖ema‖/‖raw‖ = 0.396x
+            #   일반 transformer 레이어 0.99x / matte_cnn 0.994x  ← 조건 주입 경로만 무너짐
+            # EMAModel에 bias correction이 없어 decay=0.9999가 수렴하려면 1/(1-decay)=10,000 step이
+            # 필요한데 phase1은 7,480 step뿐 → EMA의 47.3%가 아직 학습 전 초기값이다. zero-init
+            # 레이어는 0에서 자라므로 EMA가 구조적으로 과소평가되고, 그 결과 스케치 조건 신호가
+            # 40% 세기로 시작해 색 조건화가 즉시 붕괴한다(phase2 epoch5부터 단색화).
+            #
+            # 또한 모든 inference는 _infer.pth(=raw only, _save_checkpoint 참고)를 쓰므로, 채택
+            # epoch 판정 근거도 raw다. 시작 가중치를 EMA로 두면 판정 근거와 시작점이 어긋난다.
+            # (mcs2는 e623ab0 이전(6월) 실험이라 raw에서 시작했고, 그래서 2e-5로도 결과가 좋았다.)
 
         # Full resume: load controlnet weights early (optimizer init needs correct params)
         resume = cfg["training"].get("resume")
