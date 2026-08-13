@@ -1,0 +1,110 @@
+# run7_phase2 결과 
+## 학습 조건
+
+`configs/run7_phase2.yaml` vs `configs/run7_phase1.yaml`
+
+| 블록 | 키 | run7_phase1 | run7_phase2 | 상태 | 사유 |
+|---|---|---|---|---|---|
+| training | phase | pretrain | **finetune** | 변경 | edge loss 활성화 |
+| training | dataset | unbraid | **replay** | 변경 | unbraid 3000 + braid 1000, 8:8 stratified |
+| training | epochs | 40 | 40 | 동일 | |
+| training | batch_size | 16 | 16 | 동일 | batch_sampler(8+8)가 실질 결정 |
+| training | learning_rate | 1.0e-4 | **2.0e-5** | 변경 | mcs2 parity(2e-5) |
+| training | resume | `run5_1_noisegate/epoch_15.pth` | null | 변경 | phase 이관은 resume_from 사용 |
+| training | resume_from | — | `run7_phase1/epoch_40.pth` | 신규 | **weights-only (raw)**.|
+| loss_weights | flow | 1.0 | 1.0 | 동일 | |
+| loss_weights | lpips | 0.002 | 0.002 | 동일 | |
+| loss_weights | edge | 0.0 | **0.05** | 변경 | mcs2 parity 유지 (교수님 확정) |
+| loss_weights | scale_sync / s_min / s_max | true / 20 / 120 | true / 20 / 120 | 동일 | |
+| checkpointing | save_every | 5 | 5 | 동일 | epoch 5/10/…/40 + final |
+| checkpointing | perceptual_every | 1 | 1 | 동일 | |
+
+> **LR 5e-6 vs 2e-5 ( 지시 ③)**: 2e-5로 실행
+
+> **resume 형태 ( 지시 ②)**: phase1→phase2 이관은 `resume_from` = **weights-only**(controlnet
+> 가중치만, optimizer/lr_scheduler 미복원)이다. full checkpoint(`resume:`)를 쓰면 phase1의
+> lr_scheduler state(T_max=6980/last_epoch=6980, 코사인 끝점)가 복원되는데, CosineAnnealingLR은
+> 주기 특성상 그 지점부터 LR이 다시 **1e-6 → 8.2e-5로 상승**한다(시뮬레이션 실측). LR 총합 기준
+> full resume은 2e-5 런보다도 3.2배 커서 이관에는 부적합하다. 단, **동일 run 중단 후 재개**에는
+> full resume이 올바른 경로이다.
+
+## 정량지표
+
+> 방법론은 `[DIGLAB][0810][장서현]run5_1_quant_eval.md` §3.0과 동일 — run7_phase1 정량지표와 같은 조건(50장 pool, face 합성·BLD·pixel_blend·cfg 미사용, `--recolor_from_gt`)으로 측정해 직접 비교 가능하다.
+
+#### n=50
+
+| epoch | GT 오차 평균 [deg] | coherence | seed 불일치 [deg] | dE_unbraid | lpips_unbraid |
+|---:|---:|---:|---:|---:|---:|
+| 5 | 14.85 | 0.765 | 11.76±4.13 | 2.4244 | 0.2192 |
+| 10 | 14.85 | 0.757 | 11.47±3.98 | 2.1107 | 0.2176 |
+| 15 | 14.73 | 0.750 | 11.19±3.97 | 1.9928 | 0.2195 |
+| 20 | 14.63 | 0.750 | 10.91±3.82 | 2.1739 | 0.2148 |
+| 25 | 14.58 | 0.751 | 10.56±3.69 | 1.8789 | 0.2166 |
+| 30 | 14.56 | 0.751 | 10.48±3.67 | 1.9746 | **0.2133** |
+| 35 | 14.52 | 0.749 | 10.36±3.65 | **1.8096** | 0.2143 |
+| 40 | **14.48** | 0.749 | **10.27±3.64** | 1.8797 | 0.2149 |
+
+**phase1 epoch40(= phase2 시작점) 대비**
+
+| 지표 | phase1 ep40 | phase2 최저 | 최저 epoch |
+|---|---:|---:|---:|
+| GT 오차 [deg] | 14.74 | 14.48 | 40 |
+| seed 불일치 [deg] | 11.48±4.11 | 10.27 | 40 |
+| dE_unbraid | 2.2868 | 1.8096 | 35 |
+| lpips_unbraid | 0.2199 | 0.2133 | 30 |
+
+**기계적 관측**(수치에서 직접 계산한 사실):
+
+- 방향 지표 최적: GT 오차 epoch40, seed 불일치 epoch40
+- 색/구조 지표 최적: dE_unbraid epoch35, lpips_unbraid epoch30
+- GT 오차 단조 감소 여부: 예 / seed 불일치 단조 감소 여부: 예
+- coherence 범위: 0.749 ~ 0.765
+
+
+## 정성지표 — 결과 사진
+
+> seed42 기준
+
+### gt sketch
+
+
+| 파일명 | img | sketch | epoch5 | epoch10 | epoch15 | epoch20 | epoch25 | epoch30 | epoch35 | epoch40 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CM_1007 | <img src="../dataset/test/img/CM_1007.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1007.png" width="70"> |
+| CM_1027 | <img src="../dataset/test/img/CM_1027.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1027.png" width="70"> |
+| CM_1033 | <img src="../dataset/test/img/CM_1033.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1033.png" width="70"> |
+| CM_1067 | <img src="../dataset/test/img/CM_1067.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1067.png" width="70"> |
+| CM_1068 | <img src="../dataset/test/img/CM_1068.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1068.png" width="70"> |
+| CM_1082 | <img src="../dataset/test/img/CM_1082.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1082.png" width="70"> | — | — | — | — | — | — | — | — |
+| CM_1084 | <img src="../dataset/test/img/CM_1084.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1084.png" width="70"> |
+| CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="70"> | <img src="../dataset/test/sketch_gt/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/CM_1172.png" width="70"> |
+| braid_2548 | <img src="../dataset/test/img/braid_2548.png" width="70"> | <img src="../dataset/test/sketch/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/braid_2548.png" width="70"> |
+| braid_2562_1 | <img src="../dataset/test/img/braid_2562_1.png" width="70"> | <img src="../dataset/test/sketch/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/braid_2562_1.png" width="70"> |
+| braid_2625 | <img src="../dataset/test/img/braid_2625.png" width="70"> | <img src="../dataset/test/sketch/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/braid_2625.png" width="70"> |
+| braid_4156 | <img src="../dataset/test/img/braid_4156.png" width="70"> | <img src="../dataset/test/sketch/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch5/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch10/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/gt/42/epoch15/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_20/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_25/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_30/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_35/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch_40/braid_4156.png" width="70"> |
+
+### Colorful sketch
+
+| 파일명 | img | sketch | epoch5 | epoch10 | epoch15 | epoch20 | epoch25 | epoch30 | epoch35 | epoch40 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CM_1007 | <img src="../dataset/test/img/CM_1007.png" width="70"> | <img src="../dataset/test/sketch/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1007.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1007.png" width="70"> |
+| CM_1027 | <img src="../dataset/test/img/CM_1027.png" width="70"> | <img src="../dataset/test/sketch/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1027.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1027.png" width="70"> |
+| CM_1033 | <img src="../dataset/test/img/CM_1033.png" width="70"> | <img src="../dataset/test/sketch/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1033.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1033.png" width="70"> |
+| CM_1067 | <img src="../dataset/test/img/CM_1067.png" width="70"> | <img src="../dataset/test/sketch/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1067.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1067.png" width="70"> |
+| CM_1068 | <img src="../dataset/test/img/CM_1068.png" width="70"> | <img src="../dataset/test/sketch/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1068.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1068.png" width="70"> |
+| CM_1082 | <img src="../dataset/test/img/CM_1082.png" width="70"> | <img src="../dataset/test/sketch/CM_1082.png" width="70"> | — | — | — | — | — | — | — | — |
+| CM_1084 | <img src="../dataset/test/img/CM_1084.png" width="70"> | <img src="../dataset/test/sketch/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1084.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1084.png" width="70"> |
+| CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="70"> | <img src="../dataset/test/sketch/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/CM_1172.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/CM_1172.png" width="70"> |
+| braid_2548 | <img src="../dataset/test/img/braid_2548.png" width="70"> | <img src="../dataset/test/sketch/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/braid_2548.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_2548.png" width="70"> |
+| braid_2562_1 | <img src="../dataset/test/img/braid_2562_1.png" width="70"> | <img src="../dataset/test/sketch/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/braid_2562_1.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_2562_1.png" width="70"> |
+| braid_2625 | <img src="../dataset/test/img/braid_2625.png" width="70"> | <img src="../dataset/test/sketch/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/braid_2625.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_2625.png" width="70"> |
+| braid_4156 | <img src="../dataset/test/img/braid_4156.png" width="70"> | <img src="../dataset/test/sketch/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch5/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch10/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2/color/42/epoch15/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_20/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_25/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_30/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_35/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_4156.png" width="70"> |
+
+> **epoch5 열이 1차 run7_phase2 대비 핵심 비교 지점이다.** 동일 epoch·동일 seed·동일 LR에서
+> EMA 시작이면 단색, raw 시작이면 멀티컬러가 나온다.
+
+## 채택 epoch
+
+> ⚠️ 위 정량지표와 정성 이미지를 함께 보고 확정할 것. 교수님 지시 ④에 따라 방향 지표
+> (GT 오차·seed 불일치)를 필수로 포함하고 색 지표는 참고로만 사용한다.
