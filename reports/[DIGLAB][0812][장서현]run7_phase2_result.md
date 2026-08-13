@@ -59,7 +59,7 @@
 > phase2에도 LPIPS를 동일하게 적용했고, edge loss만 phase2에서 새로 켰다(phase1은 w_edge=0).
 >
 > 두 phase에 공통으로 쓰는 항목(정의 동일):
-> - `L_flow = Σ(m̃⊙(v_pred-v_target)²) / (‖m̃‖₁+ε)` — matte(헤어 영역)로 가중한 flow matching loss, matte L1 norm으로 정규화
+> - `L_flow = Σ(m̃⊙(v_pred-v_target)²) / (‖m̃‖₁+ε)` — matte(헤어 영역)로 가중한 flow matching loss, matte L1 norm으로 정규화  
 > s = clamp(numel(v_pred)/‖matte_latent‖₁, 20, 120)  (scale-sync, flow 항을 lpips/edge와 gradient 스케일 맞춤용, phase 무관 동일 적용)  
 > 
 > ```
