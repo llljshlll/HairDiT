@@ -3,12 +3,12 @@
 ## 최상단 요약 (10줄 이내)
 
 **이전 결정 사항** — 지시 ②③④ (아래 "학습 조건" 표 각주)
-- raw 가중치만 가져오는 방식으로 phase1→phase2 전환 (②)
+- weights-only로 phase1→phase2 전환 (②)
 - LR은 5e-6 아닌 2e-5 유지 (③)
 - 채택 기준은 방향 지표(GT 오차·seed 불일치) 필수, 색 지표는 참고용 (④)
 
 **합의 사항 → 상태**
-- [완료] raw 가중치만 가져오기 + LR 2e-5로 epoch 40까지 재학습
+- [완료] weights-only + LR 2e-5로 epoch 40까지 재학습
 - [부분] braid 정성·정량 괴리 — 현상만 확인(§분석 2), 원인 미확인
 - [미착수] 채택 epoch 최종 확정
 
@@ -28,8 +28,8 @@
 | training | epochs | 40 | 40 | 동일 | |
 | training | batch_size | 16 | 16 | 동일 | batch_sampler(8+8)가 실질 결정 |
 | training | learning_rate | 1.0e-4 | **2.0e-5** | 변경 | mcs2 parity(2e-5) |
-| training | resume | `run5_1_noisegate/epoch_15.pth` | null | 변경 | phase가 바뀔 때는 raw 가중치만 가져오는 방식 사용 |
-| training | resume_from | — | `run7_phase1/epoch_40.pth` | 신규 | **weights-only (raw)**.|
+| training | resume | `run5_1_noisegate/epoch_15.pth` | null | 변경 | phase가 바뀔 때는 weights-only 사용 |
+| training | resume_from | — | `run7_phase1/epoch_40.pth` | 신규 | **weights-only**.|
 | loss_weights | flow | 1.0 | 1.0 | 동일 | |
 | loss_weights | lpips | 0.002 | 0.002 | 동일 | |
 | loss_weights | edge | 0.0 | **0.05** | 변경 | mcs2 parity 유지 |
@@ -44,7 +44,7 @@
 >
 > phase1 종료 checkpoint을 full resume하면 phase1에서 쓰던 LR scheduler(CosineAnnealingLR)
 > 상태까지 복원되는데, 이 스케줄러는 주기함수라서 phase1이 끝난 지점 이후로 계속 진행시키면
-> LR이 다시 올라간다 — 그대로 두면 phase2 LR 누적량이 원래 의도(2e-5 고정)보다 3.2배 커진다.
+> LR이 다시 올라간다 — 그대로 두면 phase2 LR 누적량이 원래 의도(2e-5 고정)보다 3.2배 커진다.(실측 확인)
 > 그래서 phase가 바뀔 때는 full checkpoint resume을 쓰지 않았다.(mcs2에서도 optimizer와 LR scheduler 상태는 새로 시작함)
 >
 > 반면 같은 phase 학습이 중단되어 재시작하는 경우에는 optimizer·scheduler 상태를 그대로
