@@ -14,7 +14,7 @@
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: GT 오차 unbraid 14.85°→14.48°, braid 22.80°→20.04° (n=50, epoch5→40). mcs2 대비 run7_phase2는 sketch에 없는 색을 만들어 내는 경향이 약해짐(§분석 3)
-- 막힌 것: `braid_2625`/`braid_2562_1` 등 일부 stem·seed는 정성적으로 epoch15 이후 품질 저하되는데 정량지표(edge_iou_braid/lpips_braid)는 epoch25~35까지 계속 개선 — 원인 미확인 🔴
+- 막힌 것: `braid_2625`/`braid_2562_1` 등 일부 이미지·seed에서 정성적으로 epoch15 이후 품질 저하되는데 정량지표는 epoch25~35까지 계속 개선 — 원인 미확인 🔴
 - 다음: 채택 epoch 확정(방향 지표 기준 epoch40)
 
 ## 학습 조건
