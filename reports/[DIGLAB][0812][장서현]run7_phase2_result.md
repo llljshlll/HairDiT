@@ -289,14 +289,15 @@ matte 경계에 해당하는 부분에만 국소적으로 가우시안 블러 �
 matte feathering 식 : 
 > `eff_matte = gaussian_blur(matte, σ=feather_px)`  
 > `result = eff_matte·hair_img + (1-eff_matte)·face_img`
+> hair_img : 모델이 생성한 이미지 / face_img : 민머리 사진(배경 원본)
 
 결과 비교(seed42, epoch40, color sketch):
 
-| 파일명 | 적용 안함(α=0) | 기존 방식(α=0.75) | matte feathering |
-|---|---|---|---|
-| CM_1067 | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1067.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1067.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1067.png" width="100"> |
-| CM_1033 | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1033.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1033.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1033.png" width="100"> |
-| CM_1172 | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1172.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1172.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1172.png" width="100"> |
+| 파일명 | img | 적용 안함(α=0) | 기존 방식(α=0.75) | matte feathering |
+|---|---|---|---|---|
+| CM_1067 | <img src="../dataset/test/img/CM_1067.png" width="100"> | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1067.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1067.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1067.png" width="100"> |
+| CM_1033 | <img src="../dataset/test/img/CM_1033.png" width="100"> | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1033.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1033.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1033.png" width="100"> |
+| CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="100"> | <img src="../outputs/0813/matte_blending/0/color/seed42_epoch40/CM_1172.png" width="100"> | <img src="../outputs/0813/matte_blending/0.75/color/CM_1172.png" width="100"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1172.png" width="100"> |
 
 결과 : 큰 차이 없음
 
@@ -304,12 +305,12 @@ matte feathering 식 :
 
 경계 영역을 몇 step까지 BLD로 묶어둘지에 대한 비교(seed42, epoch40, color sketch, matte feathering 적용), 위에서 한 것들은 step 18적용:
 
-| 파일명 | step 0 | step 10 | step 15 | step 18 | step 20 |
-|---|---|---|---|---|---|
-| CM_1007 | <img src="../outputs/0814/bld/0/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1007.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1007.png" width="90"> |
-| CM_1033 | <img src="../outputs/0814/bld/0/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1033.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1033.png" width="90"> |
-| CM_1067 | <img src="../outputs/0814/bld/0/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1067.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1067.png" width="90"> |
-| CM_1084 | <img src="../outputs/0814/bld/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1084.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1084.png" width="90"> |
-| CM_1172 | <img src="../outputs/0814/bld/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1172.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1172.png" width="90"> |
+| 파일명 | img | step 0 | step 10 | step 15 | step 18 | step 20 |
+|---|---|---|---|---|---|---|
+| CM_1007 | <img src="../dataset/test/img/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1007.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1007.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1007.png" width="90"> |
+| CM_1033 | <img src="../dataset/test/img/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1033.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1033.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1033.png" width="90"> |
+| CM_1067 | <img src="../dataset/test/img/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1067.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1067.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1067.png" width="90"> |
+| CM_1084 | <img src="../dataset/test/img/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1084.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1084.png" width="90"> |
+| CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1172.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1172.png" width="90"> |
 
 결과 : step 20(matte 경계부분 자유생성 미적용)이 제일 경계부분 자연스러움
