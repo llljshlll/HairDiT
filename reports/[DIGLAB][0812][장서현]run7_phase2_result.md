@@ -55,7 +55,6 @@ unbraid만 보면 "안 까먹었나"만 알 뿐 phase2의 목적인 braid 품질
 
 ### unbraid — 유지력 (n=50, seed 4개)
 
-pool `outputs/0812/quant50/_pool50` (run7_phase1과 동일), GT `dataset/unbraid/{img,matte}/test`
 
 | epoch | GT 오차 평균 [deg] | coherence | seed 불일치 [deg] | dE_unbraid | lpips_unbraid |
 |---:|---:|---:|---:|---:|---:|
@@ -86,10 +85,9 @@ pool `outputs/0812/quant50/_pool50` (run7_phase1과 동일), GT `dataset/unbraid
 
 ### braid — 습득 (n=50, seed 4개)
 
-pool `outputs/0813/quant50/_pool50_braid` (braid test 107장 중 고정 시드 50장),
-GT `dataset/braid/{img,matte}/test`. inference 조건은 unbraid와 완전히 동일.
+inference 조건은 unbraid와 완전히 동일.
 
-지표 정의는 트레이너 `_perceptual_validate`의 braid 항목과 같다 —
+지표 정의는 braid 항목과 같다 —
 `lpips_braid`는 GT 대비 질감 충실도(↓), **`edge_iou_braid`는 입력 스케치 대비 구조 충실도(↑)로
 braid 형태를 따라갔는지를 보는 phase2의 핵심 지표**다.
 
@@ -197,7 +195,7 @@ dE_unbraid 2.42→1.81, 위 "unbraid — 유지력" 표 참고).
 **braid — 정성 관찰(일부 seed·이미지)**: 정량지표와 별개로, 육안으로는 15epoch 전후부터
 오히려 품질 저하되는 사례가 보인다.
 
-- `braid_2625`(Colorful sketch, seed 1/2/42 ): epoch가 올라갈수록 색이 노이즈처럼 깨짐
+- `braid_2625`(Colorful sketch, seed 1/2/42 ): epoch가 올라갈수록 일부 머릿결이 노이즈처럼 깨짐
 - `braid_2562_1`(gt sketch, seed 42): epoch가 올라갈수록 땋은 머리 경계가 옅어짐
 
 **braid_2625 (Colorful sketch) — seed 1 / 2 / 42**
