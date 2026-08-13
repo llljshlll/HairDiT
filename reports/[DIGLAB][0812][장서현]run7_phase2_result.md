@@ -3,12 +3,12 @@
 ## 최상단 요약 (10줄 이내)
 
 **이전 결정 사항** — 지시 ②③④ (아래 "학습 조건" 표 각주)
-- resume_from은 weights-only(raw)로 phase1→phase2 이관 (②)
+- raw 가중치만 가져오는 방식으로 phase1→phase2 전환 (②)
 - LR은 5e-6 아닌 2e-5 유지 (③)
 - 채택 기준은 방향 지표(GT 오차·seed 불일치) 필수, 색 지표는 참고용 (④)
 
 **합의 사항 → 상태**
-- [완료] resume_from weights-only + LR 2e-5로 epoch 40까지 재학습
+- [완료] raw 가중치만 가져오기 + LR 2e-5로 epoch 40까지 재학습
 - [부분] braid 정성·정량 괴리 — 현상만 확인(§분석 2), 원인 미확인
 - [미착수] 채택 epoch 최종 확정
 
@@ -28,7 +28,7 @@
 | training | epochs | 40 | 40 | 동일 | |
 | training | batch_size | 16 | 16 | 동일 | batch_sampler(8+8)가 실질 결정 |
 | training | learning_rate | 1.0e-4 | **2.0e-5** | 변경 | mcs2 parity(2e-5) |
-| training | resume | `run5_1_noisegate/epoch_15.pth` | null | 변경 | phase 이관은 resume_from 사용 |
+| training | resume | `run5_1_noisegate/epoch_15.pth` | null | 변경 | phase가 바뀔 때는 raw 가중치만 가져오는 방식 사용 |
 | training | resume_from | — | `run7_phase1/epoch_40.pth` | 신규 | **weights-only (raw)**.|
 | loss_weights | flow | 1.0 | 1.0 | 동일 | |
 | loss_weights | lpips | 0.002 | 0.002 | 동일 | |
@@ -39,16 +39,40 @@
 
 > **LR 5e-6 vs 2e-5 ( 지시 ③)**: 2e-5로 실행
 
-> **resume 형태 ( 지시 ②)**: phase1→phase2 이관은 `resume_from` = **weights-only**(controlnet
-> 가중치만, optimizer/lr_scheduler 미복원)이다. full checkpoint(`resume:`)를 쓰면 phase1의
-> lr_scheduler state(T_max=6980/last_epoch=6980, 코사인 끝점)가 복원되는데, CosineAnnealingLR은
-> 주기 특성상 그 지점부터 LR이 다시 **1e-6 → 8.2e-5로 상승**한다(시뮬레이션 실측). LR 총합 기준
-> full resume은 2e-5 런보다도 3.2배 커서 이관에는 부적합하다. 단, **동일 run 중단 후 재개**에는
-> full resume이 올바른 경로이다.
+> **resume 방식 (지시 ②)**: phase1에서 phase2로 넘어갈 때는 ControlNet 가중치만 불러오고,
+> optimizer와 LR scheduler 상태는 새로 시작했다.
+>
+> phase1 종료 checkpoint를 full resume하면 phase1에서 쓰던 LR scheduler(CosineAnnealingLR)
+> 상태까지 복원되는데, 이 스케줄러는 주기함수라서 phase1이 끝난 지점 이후로 계속 진행시키면
+> LR이 다시 올라간다 — 그대로 두면 phase2 LR 누적량이 원래 의도(2e-5 고정)보다 3.2배 커진다.
+> 그래서 phase가 바뀔 때는 full resume을 쓰지 않았다.(mcs2에서도 optimizer와 LR scheduler 상태는 새로 시작함)
+>
+> 반면 같은 phase 학습이 중단되어 재시작하는 경우에는 optimizer·scheduler 상태를 그대로
+> 이어야 하므로 full resume을 사용한다.
+
+
+> **loss 설계**: phase1·phase2 공통으로 L_flow(matte로 가중한 flow matching loss)를 기본으로
+> 하고, LPIPS를 timestep 기준으로 게이팅해서 더한다. phase2에서는 edge loss가 추가된다.
+>
+> LPIPS는 학습 step 수가 아니라 diffusion timestep(σ, 노이즈 강도)을 기준으로 켠다 —
+> σ≤0.7일 때만 적용하는 noise-gate 방식이다.
+> phase2에도 LPIPS를 동일하게 적용했고, edge loss만 phase2에서 새로 켰다(phase1은 w_edge=0).
+>
+> 두 phase에 공통으로 쓰는 항목(정의 동일):
+> - `L_flow = Σ(m̃⊙(v_pred-v_target)²) / (‖m̃‖₁+ε)` — matte(헤어 영역)로 가중한 flow matching loss, matte L1 norm으로 정규화
+> s = clamp(numel(v_pred)/‖matte_latent‖₁, 20, 120)  (scale-sync, flow 항을 lpips/edge와 gradient 스케일 맞춤용, phase 무관 동일 적용)  
+> 
+> ```
+> phase1: L_total = w_flow·(L_flow/s) + w_lpips·1[σ≤0.7]·L_LPIPS
+>               = 1.0·(L_flow/s) + 0.002·1[σ≤0.7]·L_LPIPS     (w_edge=0)
+>
+> phase2: L_total = w_flow·(L_flow/s) + w_lpips·1[σ≤0.7]·L_LPIPS + w_edge·L_edge
+>               = 1.0·(L_flow/s) + 0.002·1[σ≤0.7]·L_LPIPS + 0.05·L_edge
+> ```
 
 ## 정량지표
 
-> 방법론은 `[DIGLAB][0810][장서현]run5_1_quant_eval.md` §3.0과 동일 — run7_phase1 정량지표와 같은 조건(50장 pool, face 합성·BLD·pixel_blend·cfg 미사용, `--recolor_from_gt`)으로 측정해 직접 비교 가능하다.
+> 방법론은 `[DIGLAB][0810][장서현]run5_1_quant_eval.md` §3.0과 동일 — run7_phase1 정량지표와 같은 조건(50장 pool, face 합성·BLD·pixel_blend·crg 미사용, `--recolor_from_gt`)으로 측정해 직접 비교 가능하다.
 
 phase2는 replay(unbraid+braid 8:8) 학습이므로 **unbraid 유지력**과 **braid 습득**을 따로 측정한다.
 unbraid만 보면 "안 까먹었나"만 알 뿐 phase2의 목적인 braid 품질은 알 수 없다.
