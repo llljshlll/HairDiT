@@ -44,6 +44,7 @@ training:
   batch_size: 16                # batch_sampler(8+8)가 실질 결정하지만 명시 유지
   learning_rate: 2.0e-5
   warmup_steps: 500
+  early_stopping: false        # [0813] 기본값 True라 명시 필수 (epoch15 조기종료 재발 방지)
   mode: forward
   schedule: all
   gate_alpha: 1.0

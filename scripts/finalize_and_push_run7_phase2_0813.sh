@@ -31,11 +31,11 @@ log "이미지 스테이징"
 # 정성 결과 (seed42만 — 리포트가 참조하는 범위)
 for kind in color gt; do
     d="outputs/0813/$RUN/$kind/$SEED"
-    [ -d "$d" ] && git add -f "$d" 2>/dev/null
+    [ -d "$d" ] && git add -f --sparse "$d" 2>&1 || log "  add 실패: $d"
 done
 # 리포트가 참조하는 입력 이미지
 for d in dataset/test/img dataset/test/sketch dataset/test/sketch_gt; do
-    [ -d "$d" ] && git add -f "$d" 2>/dev/null
+    [ -d "$d" ] && git add -f --sparse "$d" 2>&1 || log "  add 실패: $d"
 done
 # 리포트 · 스크립트 · 설정 (gitignore 대상 아님)
 git add "$REPORT" \

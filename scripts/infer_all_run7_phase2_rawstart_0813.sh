@@ -33,7 +33,7 @@ OUT_QUANT=/lambda/nfs/hairDiT/outputs/0813/quant50/$RUN
 
 SEEDS="42 1 2 3"
 CFG_SCALE=2.0
-N_PARALLEL=6              # 프로세스당 ~9.5GB, GPU 81GB 단독 → 6개(57GB)로 여유 확보
+N_PARALLEL=${N_PARALLEL:-8}      # 환경변수로 조정 가능. 프로세스당 ~9GB (8개=72GB, 여유 9GB)
 LOGD=/lambda/nfs/hairDiT/outputs/0813/_logs_$RUN
 mkdir -p "$OUT_QUAL" "$OUT_QUANT" "$LOGD"
 
@@ -127,17 +127,23 @@ sleep 60
 nvidia-smi --query-gpu=memory.free --format=csv,noheader
 
 # ---------- 2) 병렬 실행 ----------
-EPOCHS=$(ls "$CKPT_DIR"/epoch_*_infer.pth "$CKPT_DIR"/final_infer.pth 2>/dev/null \
-         | sed -e 's|.*/epoch_||' -e 's|.*/||' -e 's|_infer\.pth$||' | sort -V)
-log "대상 체크포인트: $(echo $EPOCHS | tr '\n' ' ')"
+# [0813] final.pth는 epoch40 직후 저장된 동일 가중치라 중복 — 제외한다
+# (어젯밤 실측에서도 epoch15와 final의 정량 수치가 완전히 일치했다).
+# 이미 완료된 5/10/15는 job 내부 장수 체크로 자동 skip된다.
+EPOCHS=${EPOCHS:-$(ls "$CKPT_DIR"/epoch_*_infer.pth 2>/dev/null \
+         | sed -e 's|.*/epoch_||' -e 's|_infer\.pth$||' | sort -V)}
+log "대상 체크포인트: $(echo $EPOCHS | tr "\n" " ")  (N_PARALLEL=$N_PARALLEL)"
+log "PARALLEL_START"
 
 for ep in $EPOCHS; do
     if [ "$ep" = "final" ]; then ckpt="$CKPT_DIR/final.pth"; else ckpt="$CKPT_DIR/epoch_${ep}.pth"; fi
     [ -f "${ckpt%.pth}_infer.pth" ] || { log "건너뜀: ${ckpt%.pth}_infer.pth 없음"; continue; }
     for seed in $SEEDS; do
-        throttle; job_quant "$ckpt" "$ep" "$seed" &   # 50장 — 가장 오래 걸리므로 먼저 투입
-        throttle; job_color "$ckpt" "$ep" "$seed" &
-        throttle; job_gt    "$ckpt" "$ep" "$seed" &
+        throttle; job_quant "$ckpt" "$ep" "$seed" &
+        # [0813] 정성(color/gt)은 사용자가 별도 환경에서 수행 — 여기서는 정량만 돌린다.
+        # job_color / job_gt 는 함수로 남겨둠(필요 시 아래 두 줄 주석 해제).
+        # throttle; job_color "$ckpt" "$ep" "$seed" &
+        # throttle; job_gt    "$ckpt" "$ep" "$seed" &
     done
 done
 wait

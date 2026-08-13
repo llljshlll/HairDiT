@@ -160,6 +160,8 @@ def main():
     eps_gt = found_epochs("gt")
     eps_color = found_epochs("color")
     rows = parse_metrics()
+    eps_gt_str = ', '.join(eps_gt) if eps_gt else '없음'
+    eps_color_str = ', '.join(eps_color) if eps_color else '없음'
 
     body = f"""# run7_phase2 결과 (rawstart)
 
@@ -243,6 +245,12 @@ def main():
 
 > seed{SEED} 기준. inference 조건: `--num_steps 20 --bld_mode full --bld_soft_steps 18
 > --pixel_blend --pixel_blend_alpha 0.75 --cfg_scale 2.0`
+>
+> ⚠️ 아래 표에 나오는 epoch은 이 저장소에 이미지가 존재하는 것만이다
+> (gt: {eps_gt_str} / color: {eps_color_str}).
+> 정량지표는 epoch 20~40까지 전 구간 측정됐으나, 정성 이미지 일부는 별도 환경에서 생성 중이라
+> 여기 반영되지 않았을 수 있다. 누락분이 채워지면 이 스크립트를 다시 돌려 표를 갱신할 것:
+> `python scripts/make_report_run7_phase2_0813.py`
 
 ### gt sketch
 
