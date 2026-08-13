@@ -9,13 +9,12 @@
 
 **합의 사항 → 상태**
 - [완료] resume_from weights-only + LR 2e-5로 epoch 40까지 재학습
-- [완료] EMA 시작 버그(controlnet_blocks ‖ema‖/‖raw‖=0.396x) 발견·수정 후 재학습(rawstart) — 1차 run7_phase2 폐기
 - [부분] braid 정성·정량 괴리 — 현상만 확인(§분석 2), 원인 미확인
 - [미착수] 채택 epoch 최종 확정
 
 **이번 결과 / 막힌 것 / 다음**
-- 결과: GT 오차 unbraid 14.85°→14.48°, braid 22.80°→20.04° (n=50, epoch5→40). mcs2 대비 unbraid의 OOD color extrapolation 문제 해소(§분석 3)
-- 막힌 것: `braid_2625`/`braid_2562_1` 등 일부 stem·seed는 정성적으로 epoch15 이후 품질 저하되는데 정량지표(edge_iou_braid/lpips_braid)는 epoch25~35까지 계속 개선 — 원인 미확인 🔴
+- 결과: GT 오차 unbraid 14.85°→14.48°, braid 22.80°→20.04° (n=50, epoch5→40). mcs2 대비 run7_phase2는 sketch에 없는 색을 만들어 내는 경향이 약해짐(§분석 3)
+- 막힌 것: `braid_2625`/`braid_2562_1` 등 일부 이미지·seed는 정성적으로 epoch15 이후 품질 저하되는데 정량지표는 epoch25~35까지 계속 개선 — 원인 미확인 🔴
 - 다음: 채택 epoch 확정(방향 지표 기준 epoch40)
 
 ## 학습 조건
@@ -181,7 +180,7 @@ phase1에 없던 braid hair 대한 능력 학습
 | braid_4156 | <img src="../dataset/test/img/braid_4156.png" width="70"> | <img src="../dataset/test/sketch/braid_4156.png" width="70"> | <img src="../outputs/0812/run7_phase1/gt/42/epoch40/braid_4156.png" width="70"> | <img src="../outputs/0813/run7_phase2_rawstart/gt/42/epoch5/braid_4156.png" width="70"> |
 
 **Colorful sketch(unbraid)**
-색 반영 능력 향상되거나, 유지
+색 반영 능력 미세하게 향상되거나(CM_1007), 유지
 
 | 파일명 | img | sketch | phase1 epoch40 | phase2 epoch5 |
 |---|---|---|---|---|
@@ -217,7 +216,7 @@ dE_unbraid 2.42→1.81, 위 "unbraid — 유지력" 표 참고).
 
 **정량지표와의 괴리**: 반면 braid 정량지표(edge_iou_braid, lpips_braid)는 epoch25~35까지 계속
 개선된다(위 "braid — 습득" 표 참고 — edge_iou_braid 최고 epoch35, lpips_braid 최저 epoch25).
-n=50 평균에서는 개선되는데 위 두 stem처럼 개별 이미지·seed 단위에서는 품질 저하가 보임. 
+n=50 평균에서는 개선되는데 위 두 stem처럼 개별 이미지·seed 단위에서는 일부이미지에서 품질 저하가 보임. 
 정량지표(평균)가 이런 개별 사례의 품질 저하를 못 잡아내고 있을 가능성이 있다 — 원인·재현 범위는 미확인.
 
 ### 3. 색 반영
@@ -237,5 +236,4 @@ n=50 평균에서는 개선되는데 위 두 stem처럼 개별 이미지·seed �
 | 파일명 | sketch | run7_phase2 epoch40 (color) | mcs2 (color) |
 |---|---|---|---|
 | braid_4156 | <img src="../dataset/test/sketch/braid_4156.png" width="110"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_4156.png" width="110"> | <img src="../outputs/0813/mcs2_ref_seed42/color/braid_4156.png" width="110"> |
-| braid_2562_1 | <img src="../dataset/test/sketch/braid_2562_1.png" width="110"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_2562_1.png" width="110"> | <img src="../outputs/0813/mcs2_ref_seed42/color/braid_2562_1.png" width="110"> |
 | braid_2548 | <img src="../dataset/test/sketch/braid_2548.png" width="110"> | <img src="../outputs/0813/run7_phase2_rawstart/color/42/epoch_40/braid_2548.png" width="110"> | <img src="../outputs/0813/mcs2_ref_seed42/color/braid_2548.png" width="110"> |
