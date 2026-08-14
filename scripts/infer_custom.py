@@ -37,6 +37,7 @@ import sys
 import time
 from pathlib import Path
 
+import kornia.filters as KF
 import torch
 import torch.nn.functional as F
 import yaml
@@ -197,10 +198,11 @@ def run_sampling(
     controlnet, transformer, scheduler, schedule,
     sketch, matte, num_steps, device,
     vae=None, face=None, bld_mode="full", bld_soft_steps=None,
-    gate_alpha: float = 1.0, bld_alpha: float = 1.0,
+    gate_alpha: float = 1.0,
     use_last_block_hook: bool = True, raw_sigma_timestep: bool = False,
-    cond_scale: float = 1.0, cfg_scale: float | None = None,
+    cond_scale: float = 1.0, crg_scale: float | None = None,
     fixed_timestep: float | None = None,
+    crg_uncond_mode: str = "residual_off",
 ) -> tuple[torch.Tensor, torch.Tensor | None]:
     """Euler sampling → (hair_latent, face_latent | None).
 
@@ -209,9 +211,6 @@ def run_sampling(
       final — 매 스텝 블렌딩 없이, 마지막 decode 직전 단 한 번만 latent에서 원본
               img(face)로 matte 바깥을 합성 (디코더 직전 합성).
       off   — 배경 블렌딩/합성 전부 없음 (face 무시, 생성 latent 그대로).
-    bld_alpha — 매 스텝 블렌딩(full/final 공통)의 전체 강도. 1.0=matte 그대로(기존 동작),
-                0.0=배경 고정 없음(bld_mode=off와 동일 효과). mask를 1 방향으로 선형 보간:
-                eff_mask = bld_alpha*mask + (1-bld_alpha).
     use_last_block_hook — False면 마지막 DiT 블록에 block_samples[-1]을 한 번 더 더하는
                            forward hook 없이 diffusers 기본 forward만 사용
                            ([0728]texture_reanalysis.md §6-A).
@@ -222,15 +221,23 @@ def run_sampling(
                  (헤어 방향 노이즈가 timestep 정규화로 재활성화된 prior와 성긴 stroke 구간에서
                  경쟁하는 것이라는 가설의 대응 실험, planning/[0810]causation.md §2-1/2-4),
                  <1.0은 반대로 prior 쪽 비중을 키운다. 재학습 없이 추론 시점에서만 조절.
-    cfg_scale — True classifier-free guidance: v = v_uncond + w*(v_cond - v_uncond).
-                 uncond 분기는 "ControlNet residual이 전혀 없는" 프리즌 transformer 단독
-                 forward(block_controlnet_hidden_states=None) — 이 모델은 sketch/matte
-                 dropout으로 학습된 적이 없어 "진짜" null 분포는 아니지만, 이 아키텍처에서
-                 가장 원리적인 unconditional 근사다(=ControlNet 기여가 0인 상태, 즉 프리즌
-                 prior 단독). cond_scale과 달리 스텝마다 transformer를 두 번 통과하므로
-                 비용이 약 2배. None(기본)이면 uncond pass 자체를 건너뛴다(cond_scale=1.0과
-                 동일 비용). 표준 CFG 관례상 스케일 1.0=uncond 영향 없음(=cond만), 값이
-                 클수록 conditioning 쪽으로 외삽이 강해진다.
+    crg_scale — True classifier-free guidance: v = v_uncond + w*(v_cond - v_uncond).
+                 cond_scale과 달리 스텝마다 transformer를 두 번 통과하므로 비용이 약 2배.
+                 None(기본)이면 uncond pass 자체를 건너뛴다(cond_scale=1.0과 동일 비용).
+                 표준 CFG 관례상 스케일 1.0=uncond 영향 없음(=cond만), 값이 클수록
+                 conditioning 쪽으로 외삽이 강해진다. uncond 분기의 정의는 crg_uncond_mode 참고.
+    crg_uncond_mode — crg_scale 사용 시 uncond 분기를 어떻게 구성할지 (실험용,
+                 [DIGLAB][0812]final_retrain_plan.md 결정 사항 1 "안 A/안 B"에 대응):
+                 "residual_off"(기본, 안 A 대응) — ControlNet residual이 전혀 없는 프리즌
+                 transformer 단독 forward(block_controlnet_hidden_states=None). 이 모델은
+                 sketch/matte dropout으로 학습된 적이 없어 "진짜" null 분포는 아니지만, 이
+                 아키텍처에서 가장 원리적인 unconditional 근사다.
+                 "sketch_zero"(안 B 대응) — ControlNet은 그대로 돌리되 sketch만 0으로,
+                 matte는 실제 값 유지. v_cond-v_uncond가 matte 위치정보 없이 sketch(방향·색)
+                 정보만 담게 하려는 실험적 근사 — 학습 시 dropout 없이 추론에서만 흉내내는
+                 것이므로 이 역시 실제로 학습된 null 분포는 아니다. ControlNet을 uncond
+                 분기에서도 돌려야 해 crg_scale 자체의 비용(2배)에 추가 비용은 없음(어차피
+                 매 스텝 transformer 2회 통과가 지배적 비용).
     face_latent(x0_bg)는 인코딩한 배경 latent이며 composite_full에서 재사용된다.
     """
     scheduler.set_timesteps(num_steps, device=device)
@@ -266,8 +273,6 @@ def run_sampling(
             m = mask_lat
             if bld_soft_steps is not None and i >= bld_soft_steps:
                 m = (mask_lat > 1e-4).to(mask_lat.dtype)   # 경계는 keep(1), 순수배경만 복원
-            if bld_alpha != 1.0:
-                m = bld_alpha * m + (1.0 - bld_alpha)      # 강도 조절: 1.0=원본, 0.0=고정 없음
             latents = m * latents + (1.0 - m) * noised_bg
 
         block_samples, null_enc_hs, null_pooled = controlnet(
@@ -297,17 +302,42 @@ def run_sampling(
                 return_dict=False,
             )[0]
 
-        if cfg_scale is not None and cfg_scale != 1.0:
-            # unconditional 분기: ControlNet residual 없이 프리즌 transformer 단독 forward.
-            v_uncond = transformer(
-                hidden_states=latents,
-                encoder_hidden_states=null_enc_hs_bf,
-                pooled_projections=null_pooled_bf,
-                timestep=timesteps_1d,
-                block_controlnet_hidden_states=None,
-                return_dict=False,
-            )[0]
-            v_pred = v_uncond + cfg_scale * (v_cond - v_uncond)
+        if crg_scale is not None and crg_scale != 1.0:
+            if crg_uncond_mode == "sketch_zero":
+                # 안 B: ControlNet은 그대로 돌리되 sketch만 0, matte는 실제 값 유지.
+                block_samples_u, null_enc_hs_u, null_pooled_u = controlnet(
+                    noisy_latent=latents,
+                    sketch=torch.zeros_like(sketch_bf),
+                    matte=matte_bf,
+                    timesteps=timesteps_1d,
+                )
+                block_samples_u = [s.to(dtype=torch.bfloat16) for s in block_samples_u]
+                if schedule != "none":
+                    block_samples_u = gate_block_samples(block_samples_u, matte_bf, schedule, gate_alpha=gate_alpha)
+                if cond_scale != 1.0:
+                    block_samples_u = [s * cond_scale for s in block_samples_u]
+                v_uncond = transformer_forward_full_residual(
+                    transformer,
+                    block_samples_u,
+                    hidden_states=latents,
+                    encoder_hidden_states=null_enc_hs_u.to(dtype=torch.bfloat16),
+                    pooled_projections=null_pooled_u.to(dtype=torch.bfloat16),
+                    timestep=timesteps_1d,
+                    return_dict=False,
+                )[0]
+            elif crg_uncond_mode == "residual_off":
+                # 안 A: ControlNet residual 없이 프리즌 transformer 단독 forward.
+                v_uncond = transformer(
+                    hidden_states=latents,
+                    encoder_hidden_states=null_enc_hs_bf,
+                    pooled_projections=null_pooled_bf,
+                    timestep=timesteps_1d,
+                    block_controlnet_hidden_states=None,
+                    return_dict=False,
+                )[0]
+            else:
+                raise ValueError(f"crg_uncond_mode must be 'residual_off' or 'sketch_zero', got {crg_uncond_mode!r}")
+            v_pred = v_uncond + crg_scale * (v_cond - v_uncond)
         else:
             v_pred = v_cond
 
@@ -316,10 +346,7 @@ def run_sampling(
     # final 모드에서만: 디코더 직전 단 한 번 matte 바깥을 노이즈 없는 source latent
     # x0_bg로 합성. full 모드는 매스텝 블렌딩만 하고 이 하드 고정은 하지 않는다.
     if do_bg and bld_mode == "final":
-        m = mask_lat
-        if bld_alpha != 1.0:
-            m = bld_alpha * m + (1.0 - bld_alpha)
-        latents = m * latents + (1.0 - m) * x0_bg
+        latents = mask_lat * latents + (1.0 - mask_lat) * x0_bg
 
     return latents, (x0_bg if do_bg else None)
 
@@ -425,18 +452,21 @@ def composite_pixel_blend(
     matte: torch.Tensor,
     face: torch.Tensor,
     device: torch.device,
-    alpha: float = 1.0,
+    feather_px: float = 0.0,
 ) -> torch.Tensor:
     """VAE decode 후, 512x512 pixel space에서 matte로 hair/face를 합성 (decode 직후 pixel BLD).
 
-    alpha — 블렌딩 강도. 1.0=matte 그대로 합성(기존 동작), 0.0=합성 없음(순수 hair_img).
-            eff_matte = alpha*matte + (1-alpha) 로 matte를 1(=hair 유지) 방향으로 선형 보간.
+    feather_px — matte 경계에 가우시안 블러(σ=feather_px, px 단위)를 적용해 국소적으로만
+                 부드럽게 한다. 0.0(기본)=matte 그대로(하드 컷). matte=0/1인 순수 영역에서
+                 경계로부터 충분히(~3σ 이상) 떨어진 픽셀은 블러해도 불변 — 예전 alpha 방식처럼
+                 이미지 전체에 상수 오프셋을 주지 않는다([DIGLAB][0812]run7_phase2_result.md §4).
     """
     hair_img = (vae.decode(hair_latent).float().clamp(-1, 1) + 1) / 2
     matte_px = matte.to(device=device, dtype=hair_img.dtype)
     face_px = face.to(device=device, dtype=hair_img.dtype)
-    if alpha != 1.0:
-        matte_px = alpha * matte_px + (1.0 - alpha)
+    if feather_px > 0:
+        k = int(2 * round(3 * feather_px) + 1)   # ~6σ 커널, 홀수
+        matte_px = KF.gaussian_blur2d(matte_px, (k, k), (feather_px, feather_px))
     return matte_px * hair_img + (1.0 - matte_px) * face_px
 
 
@@ -523,12 +553,11 @@ def main():
     parser.add_argument("--pixel_blend", action="store_true",
                         help="VAE decode 직후 512x512 pixel space에서 matte로 hair/face 합성 "
                              "(bld_mode와 별도/병행 가능한 decode-후 compositing).")
-    parser.add_argument("--bld_alpha", type=float, default=1.0,
-                        help="매 스텝 latent 블렌딩(bld_mode full/final)의 강도. 1.0=matte 그대로"
-                             "(기존), 0.0=배경 고정 없음.")
-    parser.add_argument("--pixel_blend_alpha", type=float, default=1.0,
-                        help="--pixel_blend 사용 시 decode-후 합성 강도. 1.0=matte 그대로"
-                             "(기존), 0.0=합성 없음(순수 생성 이미지).")
+    parser.add_argument("--pixel_blend_feather", type=float, default=0.0,
+                        help="--pixel_blend 사용 시 matte 경계에 적용할 가우시안 feather 반경"
+                             "(σ, px). 0.0(기본)=matte 그대로(하드 컷, 예전 pixel_blend_alpha=1.0과 "
+                             "동일). 순수 배경/헤어 영역은 이 값과 무관하게 원본 그대로 유지된다"
+                             "(예전 pixel_blend_alpha처럼 이미지 전체에 번지지 않음).")
 
     parser.add_argument("--no_last_block_hook", action="store_true",
                         help="[0728]texture_reanalysis.md §6-A: 마지막 DiT 블록 residual "
@@ -540,10 +569,16 @@ def main():
                         help="ControlNet residual(block_samples) 전체에 곱하는 스칼라. "
                              "1.0=기존 동작. 재학습 없이 sketch conditioning 대 프리즌 prior의 "
                              "상대적 영향력을 조절 (planning/[0810]causation.md §2-1/2-4).")
-    parser.add_argument("--cfg_scale", type=float, default=None,
+    parser.add_argument("--crg_scale", type=float, default=None,
                         help="True classifier-free guidance scale. 미지정(기본)이면 비활성 "
                              "(uncond pass 생략, cond_scale과 동일 비용). 지정 시 스텝마다 "
                              "transformer를 uncond/cond 두 번 통과(비용 약 2배).")
+    parser.add_argument("--crg_uncond_mode", default="residual_off",
+                        choices=["residual_off", "sketch_zero"],
+                        help="crg_scale 사용 시 uncond 분기 구성. residual_off(기본, 안 A)= "
+                             "ControlNet residual 전체 없음. sketch_zero(안 B)=ControlNet은 "
+                             "돌리되 sketch만 0, matte는 유지 (실험용, final_retrain_plan.md "
+                             "결정 사항 1 참고).")
     parser.add_argument("--fixed_timestep", type=float, default=None,
                         help="지정 시 모델(controlnet·transformer)에 넘기는 timestep 임베딩 "
                              "입력을 이 상수로 고정(SD3.5 규약, 0~1000 스케일). 실제 노이즈 "
@@ -554,6 +589,12 @@ def main():
                         help="[0728]texture_reanalysis.md §7-3: RawMatteAnchor 출력(raw_anchor)을 "
                              "0으로 꺼서 ctrl_cond에서 B_matte(MatteCNN)만 남긴다. config의 "
                              "model.zero_raw_matte보다 우선.")
+    parser.add_argument("--gate_alpha", type=float, default=None,
+                        help="matte gate 강도 a ∈ [0,1] (PDF Eq.9, r̂=r⊙[a·m̃+(1-a)]). "
+                             "미지정(기본)이면 config의 training.gate_alpha를 그대로 쓴다 — "
+                             "즉 기존 동작 불변. 1.0=full gating, 0.0=게이트 없음"
+                             "(schedule=none과 수치적으로 동일). run8 soft gate 모델의 "
+                             "on/off 검증용 (planning/[0814]run8_code_change_spec.md).")
     parser.add_argument("--device",        default=None,
                         help="cuda / cpu (기본: cuda if available)")
     parser.add_argument("--seed",          type=int, default=None,
@@ -571,6 +612,10 @@ def main():
     local_files_only = cfg.get("local_files_only", False)
     schedule         = cfg["training"].get("schedule", "none")
     gate_alpha       = cfg["training"].get("gate_alpha", 1.0)   # PDF alpha gate (Eq. 9)
+    if args.gate_alpha is not None:
+        gate_alpha = args.gate_alpha                            # CLI가 config를 덮어씀
+    print(f"[gate] schedule={schedule}, gate_alpha={gate_alpha}"
+          f"{' (CLI override)' if args.gate_alpha is not None else ' (config)'}")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -654,17 +699,18 @@ def main():
             sketch, matte, args.num_steps, device,
             vae=vae, face=face, bld_mode=args.bld_mode,
             bld_soft_steps=args.bld_soft_steps,
-            gate_alpha=gate_alpha, bld_alpha=args.bld_alpha,
+            gate_alpha=gate_alpha,
             use_last_block_hook=not args.no_last_block_hook,
             raw_sigma_timestep=args.raw_sigma_timestep,
             cond_scale=args.cond_scale,
-            cfg_scale=args.cfg_scale,
+            crg_scale=args.crg_scale,
             fixed_timestep=args.fixed_timestep,
+            crg_uncond_mode=args.crg_uncond_mode,
         )
 
         if face is not None:
             if args.pixel_blend:
-                result = composite_pixel_blend(vae, hair_latent, matte, face, device, alpha=args.pixel_blend_alpha)
+                result = composite_pixel_blend(vae, hair_latent, matte, face, device, feather_px=args.pixel_blend_feather)
             else:
                 result = composite_full(vae, hair_latent, matte, face, device, face_latent=face_latent_bld)
         else:
