@@ -112,9 +112,14 @@ class Trainer:
         self.gate_mode      = config["training"].get("gate_mode", "fixed")
         assert self.gate_mode in ("fixed", "soft"), f"Unknown gate_mode: {self.gate_mode}"
         self.gate_dropout_p = float(config["training"].get("gate_dropout_p", 0.5))
-        # gate 추첨은 전역 RNG가 아니라 전용 Generator에서 뽑는다. 전역 CPU RNG를 소비하면
-        # DataLoader(shuffle=True)가 매 epoch iterator를 만들 때 쓰는 base seed까지 밀려서
-        # 데이터 순서가 run7과 달라진다 — gate 말고 변수가 하나 더 생기는 셈이다.
+        # gate 추첨은 전역 RNG가 아니라 전용 Generator에서 뽑는다. DataLoader(shuffle=True)는
+        # 매 epoch iterator를 만들 때 셔플 시드를 전역 CPU RNG에서 뽑으므로, 학습 step 중에
+        # 전역 RNG를 소비하면 다음 epoch 데이터 순서가 밀린다.
+        # ⚠️ 단, 학습 시드가 미고정이라 데이터 순서는 원래부터 run마다 다르다 — 지금 당장
+        # run7 대비 이득이 있는 건 아니다. 이 분리가 사는 곳은 (1) gate_dropout_p를 바꿔도
+        # 데이터 순서가 따라 바뀌지 않는다는 위생, (2) 나중에 전역 시드를 고정하면
+        # gate_mode fixed/soft 두 팔이 bit-identical한 데이터·노이즈를 받아 gate만 단일변수가
+        # 된다는 것. 비용 0이라 미리 확보해 둔다 (planning/[0814]run8_code_change_spec.md §0-C).
         # 학습 시드 미고정 관행(run4~run7)은 그대로 유지하되(torch.initial_seed()에서 파생),
         # 값을 config에 되써서 TensorBoard hparam·checkpoint에 남긴다 → gate 시퀀스만은 사후 재현 가능.
         # soft일 때만 만든다 — fixed(기존 config)에서는 config를 건드리지 않아, 저장되는
@@ -655,7 +660,8 @@ class Trainer:
             # run8 soft gate: iteration당 1회, 배치 전체가 같은 a를 쓴다(샘플 단위 아님 —
             # gate_block_samples가 스칼라만 받는다). 추첨은 self._gate_rng 전용 Generator에서만
             # 하므로 전역 RNG(노이즈·sigma·DataLoader shuffle)는 전혀 건드리지 않는다 →
-            # gate_mode만 바꾼 두 run은 데이터 순서·노이즈가 동일하게 유지된다.
+            # 전역 시드를 고정하면 gate_mode만 바꾼 두 run이 데이터 순서·노이즈까지 동일해진다
+            # (시드 미고정인 지금은 어차피 run마다 다르다 — __init__ 주석 참고).
             if self.gate_mode == "soft":
                 gate_a = float(torch.rand((), generator=self._gate_rng).item() < self.gate_dropout_p)
             else:

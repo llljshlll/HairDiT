@@ -23,7 +23,7 @@
 | D4 | `a` 난수원 | 계획서의 `random.random()` 대신 **`torch.rand`** (§1-A1) |
 | D5 | BLD | **전 스텝 블렌딩** — `--bld_soft_steps` **미지정**(= 20 step 전부 블렌딩). run7의 `18`은 승계하지 않음 |
 | D6 | 학습 시드 | **미고정 유지**(run4~run7 관행 그대로). 전역 `seed` config 키는 추가하지 않음 |
-| D7 | gate 난수원 | **전용 `torch.Generator`**(`self._gate_rng`). 전역 RNG를 소비하면 `DataLoader(shuffle=True)`의 다음 epoch base seed까지 밀려 **데이터 순서가 run7과 달라진다** — gate 외 변수가 하나 더 생기므로 분리한다 (§0-C) |
+| D7 | gate 난수원 | **전용 `torch.Generator`**(`self._gate_rng`). 전역 RNG를 소비하면 `DataLoader(shuffle=True)`의 다음 epoch 셔플 시드가 밀린다. **시드 미고정(D6) 상태에서 run7 대비 실질 이득은 없다** — 데이터 순서는 원래부터 run마다 달랐다. 나중에 시드를 고정한 2팔 실험을 가능하게 해두는 비용 0의 옵션이다 (§0-C) |
 
 ---
 
@@ -77,15 +77,33 @@ phase2는 8개 지점부터). 학습 수식은 그대로지만 궤적은 갈린�
 RNG를 건드리지 않는다(코드 확인 완료) — 난수열에 영향 없다.
 → 어차피 학습 시드가 미고정(D6)이라 run7과 run8은 처음부터 다른 난수열이다. 실질 영향은 없다.
 
-**gate 추첨을 전역 RNG에서 뽑지 않는 이유(D7)** — 만약 `torch.rand(())`를 전역에서 뽑으면
-`DataLoader(shuffle=True)`가 매 epoch iterator 생성 시 쓰는 base seed(`torch.empty(...).random_()`,
-generator=None → 전역 CPU 생성기)까지 밀려서 **epoch 2부터 데이터 순서가 달라진다**. 이건 시드
-고정 여부와 무관하게 발생하는, gate와 무관한 두 번째 변수다. 전용 Generator로 분리하면 전역
-RNG 소비가 0이 되어 이 오염이 사라진다(§6-V4b에서 실측 확인).
+**gate 추첨을 전용 Generator에서 뽑는 이유(D7) — 과장하지 말 것.**
+`shuffle=True`인 DataLoader는 매 epoch iterator를 만들 때 셔플 시드를
+`torch.empty(()).random_()`(generator=None → **전역 CPU 생성기**)에서 뽑는다. 따라서 학습 step
+중에 전역 CPU RNG를 소비하면 다음 epoch의 데이터 순서가 실제로 밀린다. 실측(torch 2.9.1):
 
-**엄밀한 단일변수 비교를 원한다면** 전역 시드를 고정하고 `gate_mode: fixed` / `soft` 두 팔을
-같은 시드로 돌리면 된다 — D7 덕분에 두 팔의 노이즈·sigma·데이터 순서가 bit-identical해진다.
-이번에는 시드 미고정(D6)이라 그 비교는 하지 않는다. 리포트에 caveat로 남긴다(§9-3).
+```
+seed 고정 재현              : True
+epoch0 동일                 : True
+epoch1 동일                 : False   ← 전역 RNG 소비 시 여기서 갈림
+시드 미고정 두 run 동일     : False   ← 애초에 매 run 다름
+```
+
+마지막 줄이 핵심이다. **시드가 미고정(D6)이라 run5_1·run7·run8은 원래부터 전부 다른 데이터
+순서로 돈다.** 즉 gate 추첨을 전역에서 뽑았더라도 "또 다른 무작위 순서"였을 뿐이고 분포도
+같으므로, **run7 vs run8 비교에 대한 D7의 실질 이득은 0이다.** 초판이 "gate 외 변수가 하나 더
+생긴다"고 쓴 것은 과장 — 그 변수는 이미 통제 밖이었다.
+
+D7이 실제로 사는 곳은 두 군데다:
+1. **결합 제거** — `gate_dropout_p`를 바꿔도 데이터 순서가 따라 바뀌지 않는다(하이퍼파라미터가
+   무관한 축을 건드리지 않는다는 위생).
+2. **미래의 통제 실험** — 전역 시드를 고정하고 `gate_mode: fixed` / `soft` 두 팔을 같은 시드로
+   돌리면 노이즈·sigma·데이터 순서가 bit-identical해져 **gate만 단일변수**가 된다. 전역 RNG를
+   썼다면 시드를 고정해도 두 팔의 데이터가 갈려 이게 불가능하다.
+
+즉 지금 이득을 보려고 넣은 게 아니라, 나중에 2팔 실험을 하고 싶어질 때를 위해 **비용 0으로
+확보해둔 옵션**이다. 이번 run8은 시드 미고정이므로 그 비교는 하지 않고, 리포트에 caveat로만
+남긴다(§9-3).
 
 ---
 
@@ -350,9 +368,9 @@ early-stopping·로깅 로직까지 diff에 섞여 검토가 불가능해진다)
                 block_samples = gate_block_samples(block_samples, matte, self.schedule, gate_alpha=gate_a)
 ```
 
-> `generator=self._gate_rng`가 핵심이다(D7). 전역 `torch.rand(())`를 쓰면 전역 CPU RNG가
-> 소비되어 `DataLoader(shuffle=True)`의 다음 epoch base seed가 밀리고, 그러면 데이터 순서가
-> run7과 갈려 gate 외 변수가 하나 더 생긴다 — §0-C 참고.
+> `generator=self._gate_rng`가 핵심이다(D7). 전역 `torch.rand(())`를 쓰면 `DataLoader`의 다음
+> epoch 셔플 시드가 밀린다. 시드 미고정인 지금은 실질 차이가 없지만(데이터 순서는 원래부터
+> run마다 다름), 이 분리가 있어야 나중에 시드를 고정한 fixed/soft 2팔 비교가 가능해진다 — §0-C.
 > `self.gate_alpha`는 그대로 남겨둔다 — `_validate`/`_perceptual_validate`와 추론 config가 쓴다.
 
 ### 3-6. hunk 6 — `gate_a` 로깅 (`_train_step` 말미, 727-730행)
@@ -654,7 +672,7 @@ xs = [float(torch.rand((), generator=g).item() < 0.5) for _ in range(20000)]
 print("V4 mean =", sum(xs)/len(xs), "(기대 0.50 ± 0.01)")
 
 # 전용 Generator를 아무리 소비해도 전역 RNG는 그대로여야 한다 —
-# 이게 깨지면 DataLoader 순서가 밀려 gate 외 변수가 생긴다(§0-C).
+# 이게 깨지면 시드를 고정해도 fixed/soft 두 팔의 DataLoader 순서가 갈린다(§0-C).
 torch.manual_seed(7); before = torch.rand(3)
 torch.manual_seed(7)
 g2 = torch.Generator().manual_seed(999)
