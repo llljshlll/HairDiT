@@ -260,35 +260,34 @@ n=50 평균에서는 개선되는데 위 두 stem처럼 개별 이미지·seed �
 #### 기존 방식
 
 경계 처리는 두 단계로 이루어진다 — 18step까지는 매 스텝 BLD 적용, 18~20step은 순수 배경
-(matte=0)만 계속 BLD 적용하고 경계(0<matte<1) 구간은 자유 생성. 이후 decoder를 통과한 뒤
+(matte=0)만 계속 BLD 적용하고 경계(0 < matte < 1) 구간은 자유 생성. 이후 decoder를 통과한 뒤
 pixel space에서 한 번 더 matte로 합성한다(합성식은 아래 참고):
 
-| 단계 | 시점 | 파라미터 | 코드 |
-|---|---|---|---|
-| ① latent BLD | 매 디노이징 스텝(`bld_mode=full`) | `bld_soft_steps=18`(20스텝 중), `bld_alpha=1.0`(기본, 미지정) | :273-280 |
-| ② pixel blend | VAE decode 직후 1회 | `pixel_blend_alpha=0.75` | :456-474 |
+| 단계 | 시점 | 파라미터 |
+|---|---|---|
+| ① latent BLD | 매 디노이징 스텝(`bld_mode=full`) | `bld_soft_steps=18`(20스텝 중) |
+| ② pixel blend | VAE decode 직후 1회 | `pixel_blend_alpha=0.75` |
 
-> ① `latents = m·latents + (1-m)·noised_bg`,  `noised_bg = (1-σ)·x0_bg + σ·noise`  
-> `m = mask_lat` (i<18) / `m = 1[mask_lat>1e-4]` (i≥18, 순수 배경만 유지·경계는 자유 생성)
+> ① `latents = m·latents + (1-m)·noised_bg`,  `noised_bg = (1-σ)·x0_bg + σ·noise`   
+> `m = mask_lat` (i<18) / `m = 1[mask_lat>1e-4]` (i≥18, 순수 배경만 유지·경계는 자유 생성). 
 >
-> ② `eff_matte = α·matte + (1-α)`  (α=`pixel_blend_alpha`)  
-> `result = eff_matte·hair_img + (1-eff_matte)·face_img`
+> ② `eff_matte = α·matte + (1-α)`  (α=0.75로 설정)     
+> `result = eff_matte·hair_img + (1-eff_matte)·face_img`.   
+> hair_img : 모델이 생성한 이미지 / face_img : 민머리 사진(배경 원본)
 
 **원인 분석**:
-1. **pixel blend(alpha)** — ②의 `eff_matte` 식이 문제. matte=0인 순수 배경 픽셀에서도
-   `eff_matte=(1-α)`로 고정되는데, 이 값은 헤어로부터의 거리와 무관한 상수. 즉 α<1이면
-   경계 근처뿐 아니라 이미지 전체 배경에 생성 이미지(hair_img)가 (1-α) 비율로 균일하게
-   섞여 들어감 — 경계만 부드럽게 해야 하는데 전역 블렌딩이 되고 있었음.
+1. **pixel blend(alpha)** — ②의 `eff_matte` 식이 문제.   
+   matte=0인 순수 배경 픽셀에서도 `eff_matte=(1-α)`로 고정되는데, 이 값은 헤어로부터의 거리와 무관한 상수. 즉 α<1이면 경계 근처뿐 아니라 이미지 전체 배경에 생성 이미지(hair_img)가 (1-α) 비율로 균일하게 섞여 들어감 — 경계만 부드럽게 해야 하는데 전역 블렌딩이 되고 있었음.(위 평가에서는 다 α = 0.75로 설정)
 2. **BLD step ablation** — 경계 영역은 18step까지 BLD를 적용하고
    나머지 2step만 자유 생성하는데, 여러 이미지에서 18이 아닌 다른 step 값과의 비교 필요.
 
 #### 1. matte feathering
 
-matte 경계에 해당하는 부분에만 국소적으로 가우시안 블러 적용.
+기존 방식의 문제(matte=0인 부분에도 생성 이미지가 섞여 들어감)를 해결하기 위해 matte 경계에 해당하는 부분에만 국소적으로 가우시안 블러 적용.
 
-matte feathering 식 : 
-> `eff_matte = gaussian_blur(matte, σ=feather_px)`  
-> `result = eff_matte·hair_img + (1-eff_matte)·face_img`
+matte feathering 식 :  
+> `eff_matte = gaussian_blur(matte, σ=feather_px=0)`   
+> `result = eff_matte·hair_img + (1-eff_matte)·face_img`  
 > hair_img : 모델이 생성한 이미지 / face_img : 민머리 사진(배경 원본)
 
 결과 비교(seed42, epoch40, color sketch):
@@ -313,4 +312,5 @@ matte feathering 식 :
 | CM_1084 | <img src="../dataset/test/img/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1084.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1084.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1084.png" width="90"> |
 | CM_1172 | <img src="../dataset/test/img/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/10/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/15/color/CM_1172.png" width="90"> | <img src="../outputs/0814/matte_blending_feather/0/color/CM_1172.png" width="90"> | <img src="../outputs/0814/bld/20/color/CM_1172.png" width="90"> |
 
-결과 : step 20(matte 경계부분 자유생성 미적용)이 제일 경계부분 자연스러움
+결과 : step 20(matte 경계부분 자유생성 미적용)이 가장 경계부분 자연스러움  
+CM_1067에 보이는 배경 블러 일부는 blad 데이터 생성 때 생성된 bld 배경 이미지부터 있던 블러임
