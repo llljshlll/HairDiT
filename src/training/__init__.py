@@ -1,5 +1,4 @@
 from .losses import HairLoss, FlowMatchingLoss, PerceptualLoss, SketchEdgeAlignmentLoss
-from .ema import EMAModel
 from .trainer import Trainer
 
 __all__ = [
@@ -7,6 +6,5 @@ __all__ = [
     "FlowMatchingLoss",
     "PerceptualLoss",
     "SketchEdgeAlignmentLoss",
-    "EMAModel",
     "Trainer",
 ]
