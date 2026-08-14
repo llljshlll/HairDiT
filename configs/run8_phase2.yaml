@@ -1,0 +1,79 @@
+# configs/run8_phase2.yaml — run8 phase2: unbraid+braid replay finetune, soft gate 유지
+#
+# 근거: planning/[0814]run8_soft_gate_plan.md, planning/[0814]run8_code_change_spec.md
+#
+# 🔴 템플릿은 configs/run7_phase2_rawstart.yaml (실제 완주본)이다.
+#    configs/run7_phase2.yaml은 EMA 시작 버그로 실패한 1차 시도라 승계하지 않는다.
+#
+#   - curriculum+replay: [0721]loss_design_rationale.md의 8:8 stratified 설정 그대로
+#     (dataset: replay, StratifiedBatchSampler가 매 배치 unbraid 8 + braid 8)
+#   - loss: lpips는 phase1과 동일하게 noise-gate·w_lpips=0.002 유지.
+#     edge는 phase2에서만 켜짐(w_edge=0.05, mcs2 parity 유지, 교수님 확정)
+#   - LR 2.0e-5: mcs2(6월, raw 시작, 2e-5)에서 검증됐고 run7_phase2_rawstart 실행값이다.
+#     (교수님 지시 ③ — 커밋된 run7_phase2.yaml의 5.0e-6은 실행값이 아니다)
+base: configs/base.yaml
+
+# phase1(run8_phase1)과 동일 아키텍처 — resume_from(weights-only)이 가중치 shape 일치를
+# 전제하므로 기본값에 의존하지 않고 명시.
+model:
+  zero_matte_cond: false
+  zero_matte_feat: false
+  zero_raw_matte: false
+  num_extra_conditioning_channels: 16
+  matte_bias_zero_init: true
+  use_matte_scale: true
+
+training:
+  phase: finetune              # ⚠️ 필수! edge 활성화 + lpips noise-gate 유지
+  dataset: replay              # unbraid_train(3000) + braid_train(1000), 8:8 stratified
+  sample_seed: 0               # 8:8 sampler 셔플 seed (재현성)
+  epochs: 40
+  batch_size: 16               # batch_sampler(8+8)가 실질 결정하지만 명시 유지
+  learning_rate: 2.0e-5
+  warmup_steps: 500
+  mode: forward
+  schedule: all
+  gate_alpha: 1.0              # phase1과 동일 — 학습에는 안 쓰이고 추론 기본값으로만 쓰인다
+  gate_mode: soft              # 🆕 phase2도 soft 유지
+  gate_dropout_p: 0.5          # 🆕
+  midtrain_eval: false         # 🆕
+  early_stopping: false        # 
+  resume: null                 # ⚠️ phase 전환에 --resume 금지 — optimizer/lr_scheduler state까지
+                               #    복원되면 지정한 LR이 무시되고 phase1 cosine 스케줄 잔여분이
+                               #    이어진다. CosineAnnealingLR은 주기함수라 phase1 종료 지점
+                               #    이후로 진행시키면 LR이 되레 올라간다(run7_phase2 리포트:
+                               #    의도 대비 누적 LR 3.2배, 실측 확인).
+  # 🔴 placeholder — run8_phase1 오프라인 스윕(spec §8-1) 결과로 확정할 것. 무조건 epoch40 아님.
+  #    weights-only 로드다(trainer.py resume_from 분기). EMA 덮어쓰기는 코드에서 제거됨 —
+  #    trainer.py의 재발 방지 주석 참고.
+  resume_from: checkpoints/run8_phase1/epoch_40.pth   # ← 사후 검토 후 확정 필요
+
+  loss_weights:
+    flow: 1.0
+    lpips: 0.002               # phase1과 동일 (0.1 아님)
+    edge: 0.05                 # mcs2 parity 유지 (교수님 확정, 올리지 않음)
+    lpips_noise_cutoff: 0.7
+    lpips_gate: noise          # ⚠️ main의 HairLoss는 이 키를 읽지 않는다(noise gate 하드코딩).
+    scale_sync: true
+    s_min: 20.0
+    s_max: 120.0
+
+checkpointing:
+  output_dir: checkpoints/run8_phase2/
+  eval_every: 5                # midtrain_eval:false라 무시됨
+  perceptual_every: 1          # midtrain_eval:false라 무시됨
+  save_every: 5
+
+# ⚠️ 판정에 best.pth를 쓰지 말 것 — 자동저장은 제거됨. 채택 epoch도 phase1과 동일하게
+#   epoch_N.pth들을 오프라인 스윕해서 사후 수동 선정한다.
+
+# 착수 직후 필수 확인:
+#   - "Loaded Phase 1 weights from checkpoints/run8_phase1/epoch_N.pth" 출력
+#     (EMA 관련 로그는 코드에서 제거됐으므로 안 뜨는 게 정상 — run7_phase2*.yaml 하단의
+#      "Loaded Phase 1 EMA weights" 주석은 stale이니 무시)
+#   - "Resumed from ..."은 **안 떠야** 한다 (resume: null 확인)
+#   - "[gate] soft gate ON — a ~ Bernoulli(0.5), gate_seed=..." 출력
+#   - "[PerceptualVal] ..." 로그가 안 떠야 한다
+#   - step ~10: lpips_active_fraction ≈ 0.40 ± 0.03 (phase1과 동일 게이트)
+#   - gate_a 이동평균 ≈ 0.50
+#   - braid_train/braid_test 데이터셋이 서버에 준비돼 있는지

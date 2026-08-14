@@ -1,0 +1,80 @@
+# configs/run8_phase1.yaml — run8 phase1: run7과 동일 파이프라인, matte gate만 soft(gate dropout)
+#
+# 근거: planning/[0814]run8_soft_gate_plan.md, planning/[0814]run8_code_change_spec.md
+#   - configs/run7_phase1.yaml에서 gate 결정 방식 + 중간평가 on/off 외에는 전부 동일
+#   - 시작점도 run7과 같은 run5_1(epoch15) full checkpoint
+#
+# run7_phase1.yaml 대비 실질 변경 4개: gate_mode / gate_dropout_p / midtrain_eval / output_dir.
+# 그 외는 한 글자도 바꾸지 않았다 — run7과의 단일변수 비교가 이 실험의 전부다.
+base: configs/base.yaml
+
+# 32ch = 16 latent(z_sketch+λ·matte_bias) + 16 raw anchor. run7_phase1과 동일 아키텍처 —
+# resume 시 가중치 shape이 맞아야 하므로 기본값에 의존하지 않고 명시한다.
+model:
+  zero_matte_cond: false
+  zero_matte_feat: false
+  zero_raw_matte: false
+  num_extra_conditioning_channels: 16
+  matte_bias_zero_init: true
+  use_matte_scale: true
+
+training:
+  phase: pretrain            # edge off, LPIPS noise gate (edge는 phase2에서만 켜짐)
+  dataset: unbraid           # unbraid 3000 → 187 step/epoch
+  epochs: 40                 # cosine LR T_max가 이 값에 묶여 있음 — 줄이지 말 것
+  batch_size: 16             # 누락 금지(기본값 4) — s≈37 전제가 깨짐
+  learning_rate: 1.0e-4
+  warmup_steps: 500
+  mode: forward
+  schedule: all
+  gate_alpha: 1.0            # gate_mode=soft라 학습에는 쓰이지 않는다. 다만 이 yaml로
+                             # infer_custom.py를 돌릴 때의 기본 게이트 값이므로 1.0로 유지
+                             # (오프라인 스윕 전제 — spec §8).
+  gate_mode: soft            # 🆕 iteration마다 a∈{0,1}을 Bernoulli(gate_dropout_p)로 샘플
+  gate_dropout_p: 0.5        # 🆕
+  # gate_seed: 미지정 → torch.initial_seed()에서 파생(학습 시드 미고정 관행 유지).
+  #   실제 사용된 값은 TensorBoard hparam·checkpoint config·시작 로그에 남는다.
+  midtrain_eval: false       # 🆕 in-loop _validate/_perceptual_validate 전면 off → 오프라인 스윕
+  # 🔴 착수 전 필수 확인: optimizer/lr_scheduler 상태가 포함된 *full* checkpoint여야 한다
+  #    (가중치만 있는 epoch_15_infer.pth로는 안 됨). 경로가 없으면 trainer는 경고 없이
+  #    통과하고 epoch 0부터 학습을 시작한다 — spec §7-P1 검증 스크립트로 먼저 확인할 것.
+  resume: checkpoints/run5_1_noisegate/epoch_15.pth
+  early_stopping: false      # ⚠️ 기본값이 True다. midtrain_eval:false라 발동할 수 없지만 명시.
+
+  loss_weights:
+    flow: 1.0
+    lpips: 0.002              # run4/run5/run5_1/run7과 동일
+    edge: 0.0                 # pretrain
+    # PixelGen noise gate (논문 Eq.9, tau=0.3), run7과 동일.
+    # 활성되는 것은 timestep 구간의 하위 70%(logit-normal+shift=3.0 샘플링에서 실측 약 40%).
+    lpips_noise_cutoff: 0.7
+    lpips_gate: noise         # ⚠️ main의 HairLoss는 이 키를 읽지 않는다(noise gate 하드코딩).
+                              #    run7 config와의 표기 일치를 위해 남길 뿐, 동작은 동일.
+    scale_sync: true
+    s_min: 20.0
+    s_max: 120.0
+
+  # densify 미적용 — run5 vs run5_1/run4 2×2 팩토리얼에서 densify ON이 방향지표 전부 악화.
+  # enabled=false면 mask_root/thresholds는 안 읽히지만 무엇을 껐는지 남기려고 값은 유지.
+  densify:
+    enabled: false
+    mask_root: data/densify_masks
+    thresholds: [null, 21, 15, 12]
+
+checkpointing:
+  # 🔴 run7_phase1/로 두면 같은 파일명으로 경고 없이 덮어쓴다. 반드시 새 디렉터리.
+  output_dir: checkpoints/run8_phase1/
+  eval_every: 10              # midtrain_eval:false라 무시됨 (run7 대비 diff 표용으로 값 유지)
+  perceptual_every: 1         # midtrain_eval:false라 무시됨
+  save_every: 5               # epoch 5/10/.../40 → 오프라인 스윕 대상
+
+# ⚠️ 판정에 best.pth를 쓰지 말 것 — best.pth 자동저장은 제거됨. phase2로 넘길 epoch은
+#   epoch_N.pth들을 오프라인 스윕(spec §8-1)해서 방향 지표 우선으로 사후 선정한다.
+
+# 착수 직후 필수 확인:
+#   - "Resumed from checkpoints/run5_1_noisegate/epoch_15.pth (epoch 15, step ...)" 출력
+#   - "[gate] soft gate ON — a ~ Bernoulli(0.5), gate_seed=..." 출력
+#   - "[PerceptualVal] held-out eval set ..." 로그가 **안 찍혀야** 한다 (midtrain_eval:false)
+#   - step ~200 시점 gate_a 이동평균 ≈ 0.50 ± 0.05
+#   - step ~10:  lpips_active_fraction ≈ 0.40 ± 0.03
+#   - 전 구간:   densify_t 로그 키가 없어야 한다

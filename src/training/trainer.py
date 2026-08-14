@@ -105,6 +105,31 @@ class Trainer:
         self.inverse_mode = config["training"].get("mode", "forward") == "inverse"
         self.schedule     = config["training"].get("schedule", "none")
         self.gate_alpha   = config["training"].get("gate_alpha", 1.0)   # PDF alpha gate (Eq. 9)
+        # run8 soft gate (planning/[0814]run8_soft_gate_plan.md).
+        #   "fixed" — 기존 동작. 항상 self.gate_alpha를 쓴다.
+        #   "soft"  — iteration마다 a ∈ {0,1}을 Bernoulli(gate_dropout_p)로 뽑는다(gate dropout).
+        # 키가 없으면 "fixed"이므로 run1~run7 config는 거동이 100% 동일하다(회귀 없음).
+        self.gate_mode      = config["training"].get("gate_mode", "fixed")
+        assert self.gate_mode in ("fixed", "soft"), f"Unknown gate_mode: {self.gate_mode}"
+        self.gate_dropout_p = float(config["training"].get("gate_dropout_p", 0.5))
+        # gate 추첨은 전역 RNG가 아니라 전용 Generator에서 뽑는다. 전역 CPU RNG를 소비하면
+        # DataLoader(shuffle=True)가 매 epoch iterator를 만들 때 쓰는 base seed까지 밀려서
+        # 데이터 순서가 run7과 달라진다 — gate 말고 변수가 하나 더 생기는 셈이다.
+        # 학습 시드 미고정 관행(run4~run7)은 그대로 유지하되(torch.initial_seed()에서 파생),
+        # 값을 config에 되써서 TensorBoard hparam·checkpoint에 남긴다 → gate 시퀀스만은 사후 재현 가능.
+        # soft일 때만 만든다 — fixed(기존 config)에서는 config를 건드리지 않아, 저장되는
+        # checkpoint config가 run7까지와 바이트 단위로 같은 키 집합을 유지한다.
+        self.gate_seed: Optional[int] = None
+        self._gate_rng: Optional[torch.Generator] = None
+        if self.gate_mode == "soft":
+            _gs = config["training"].get("gate_seed")
+            self.gate_seed = int(_gs) if _gs is not None else int(torch.initial_seed() % (2 ** 31))
+            config["training"]["gate_seed"] = self.gate_seed
+            self._gate_rng = torch.Generator().manual_seed(self.gate_seed)
+        # run8: 학습 루프 내 중간평가(_validate / _perceptual_validate)를 전부 끄고 오프라인
+        # 스윕으로 대체한다. 기본 True = 기존 동작.
+        # ⚠️ 이 줄은 반드시 _setup_perceptual_eval() 호출(아래)보다 위에 있어야 한다.
+        self.midtrain_eval  = config["training"].get("midtrain_eval", True)
         self.w_cycle      = config["training"]["loss_weights"].get("cycle", 0.0)
         self.cycle_start  = config["training"].get("cycle_start", 9999)
         self.w_sketch_dec = config["training"]["loss_weights"].get("sketch_decoder", 0.0)
@@ -127,7 +152,8 @@ class Trainer:
 
         self._setup_models()
         self._setup_data()
-        self._setup_perceptual_eval()
+        if self.midtrain_eval:
+            self._setup_perceptual_eval()   # held-out 32장 준비도 불필요해진다
         self._setup_optimizer()
         self._prepare_accelerator()
 
@@ -472,14 +498,20 @@ class Trainer:
             f"Starting {self.phase} training for {epochs} epochs"
             + (f" (resuming from epoch {self.start_epoch})" if self.start_epoch else "")
         )
+        if self.gate_mode == "soft":
+            self.accelerator.print(
+                f"[gate] soft gate ON — a ~ Bernoulli({self.gate_dropout_p}), "
+                f"gate_seed={self.gate_seed} (전용 Generator, 전역 RNG 미소비)"
+            )
 
         # epoch-0 baseline — 학습 시작 전 상태로 perceptual val 1회 실행해 _best_unbraid의
         # 앵커로 사용. phase2 이관 직후 상태를 baseline으로 잡아야 게이트가 '이미 1 epoch
         # 열화된 값'에 앵커링되지 않는다. phase1은 미학습 모델이라 baseline이 커서 무해
         # ([0724] planning §4-3).
-        pval0 = self._perceptual_validate()
-        self._best_unbraid = min(self._best_unbraid, pval0["dE_unbraid"])
-        self.accelerator.log({f"{k}/ep0": v for k, v in pval0.items()}, step=self.global_step)
+        if self.midtrain_eval:
+            pval0 = self._perceptual_validate()
+            self._best_unbraid = min(self._best_unbraid, pval0["dE_unbraid"])
+            self.accelerator.log({f"{k}/ep0": v for k, v in pval0.items()}, step=self.global_step)
 
         for epoch in range(self.start_epoch, epochs):
             self._current_epoch = epoch + 1
@@ -520,7 +552,7 @@ class Trainer:
 
             # flow val — 참고용으로만 드물게 로깅(품질 지표가 아니므로 best.pth 저장은
             # 여기서 하지 않는다; 정점 선정은 아래 perceptual val 기준으로만 함, [0724] planning §4-3).
-            if (epoch + 1) % eval_every == 0:
+            if self.midtrain_eval and (epoch + 1) % eval_every == 0:
                 val_loss = self._validate()
                 self.accelerator.print(f"Val loss: {val_loss:.4f}")
                 self.accelerator.log(
@@ -530,7 +562,7 @@ class Trainer:
                 self.best_val_loss = min(self.best_val_loss, val_loss)
 
             stop = False
-            if (epoch + 1) % perceptual_every == 0:
+            if self.midtrain_eval and (epoch + 1) % perceptual_every == 0:
                 pval = self._perceptual_validate()
                 self.accelerator.log(pval, step=self.global_step)
 
@@ -620,8 +652,16 @@ class Trainer:
                 timesteps=timesteps_1d,
             )
             block_samples = [s.to(dtype=torch.bfloat16) for s in block_samples]
+            # run8 soft gate: iteration당 1회, 배치 전체가 같은 a를 쓴다(샘플 단위 아님 —
+            # gate_block_samples가 스칼라만 받는다). 추첨은 self._gate_rng 전용 Generator에서만
+            # 하므로 전역 RNG(노이즈·sigma·DataLoader shuffle)는 전혀 건드리지 않는다 →
+            # gate_mode만 바꾼 두 run은 데이터 순서·노이즈가 동일하게 유지된다.
+            if self.gate_mode == "soft":
+                gate_a = float(torch.rand((), generator=self._gate_rng).item() < self.gate_dropout_p)
+            else:
+                gate_a = self.gate_alpha
             if self.schedule != "none":
-                block_samples = gate_block_samples(block_samples, matte, self.schedule, gate_alpha=self.gate_alpha)
+                block_samples = gate_block_samples(block_samples, matte, self.schedule, gate_alpha=gate_a)
             null_enc_hs   = null_enc_hs.to(dtype=torch.bfloat16)
             null_pooled   = null_pooled.to(dtype=torch.bfloat16)
 
@@ -727,6 +767,10 @@ class Trainer:
         if "densify_t" in batch:
             log_dict["densify_t"] = float(batch["densify_t"][0])
 
+        # run8 soft gate 실측 검증용 — 이 스칼라의 이동평균이 gate_dropout_p(0.5)로 수렴하는지
+        # 확인한다(lpips_active_fraction과 같은 용도). fixed 모드에서는 상수라 무해.
+        log_dict["gate_a"] = float(gate_a)
+
         return total_loss, log_dict
 
     @torch.no_grad()
@@ -802,6 +846,13 @@ class Trainer:
         Returns:
             {"dE_unbraid":.., "lpips_unbraid":.., "edge_iou_braid":.., "lpips_braid":..}
         """
+        # midtrain_eval=False면 _setup_perceptual_eval()을 건너뛰어 self._pval_* 자체가 없다.
+        # 호출부를 하나라도 놓쳤을 때 학습 중반에 AttributeError로 죽지 않도록 여기서 먼저 막는다
+        # (이 함수는 scripts.infer_custom / scripts.eval_metrics를 import하므로, 그 무거운
+        #  의존성 로드까지 여기서 차단된다).
+        if not self.midtrain_eval:
+            return {}
+
         from scripts.eval_metrics import (
             _safe_mean,
             canny_edges,
