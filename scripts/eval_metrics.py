@@ -91,19 +91,16 @@ ALL_METRICS = frozenset({
 # "유리한 것 선택"(last_test.md) → 둘 다 계산해두고 리포트에서 하나를 고른다.
 BND_KS = (8, 16)
 
-SPLITS = {
-    "braid": {
-        "img":    ROOT / "dataset/braid/img/test",
-        "matte":  ROOT / "dataset/braid/matte/test",
-        "sketch": ROOT / "dataset/braid/sketch/test",
-    },
-    "unbraid": {
-        "img":    ROOT / "dataset/unbraid/img/test",
-        "matte":  ROOT / "dataset/unbraid/matte/test",
-        "sketch": ROOT / "dataset/unbraid/sketch/test",
-    },
-    "combined": None,  # braid + unbraid 합산 — --pred braid_dir unbraid_dir 순서로 2개 지정
-}
+def build_splits(data_root: Path) -> dict:
+    """{split: {img,matte,sketch}} 경로. data_root 아래 {split}/{kind}/test 레이아웃 전제."""
+    return {
+        s: {k: data_root / s / k / "test" for k in ("img", "matte", "sketch")}
+        for s in ("braid", "unbraid")
+    } | {"combined": None}   # combined는 --pred braid_dir unbraid_dir 순서로 2개 지정
+
+
+# 모듈 전역 — --data-root로 main()에서 교체된다(테스트/외부 호출은 직접 대입해도 된다).
+SPLITS = build_splits(ROOT / "dataset")
 
 
 # ---------------------------------------------------------------------------
@@ -384,13 +381,29 @@ def get_arcface():
     return _arcface_app
 
 
+ARCFACE_PAD_RATIO = 0.25
+_arcface_miss = 0
+
+
 def _arcface_embed(img_rgb: np.ndarray):
-    """가장 큰 얼굴의 L2-정규화 512-d 임베딩. 얼굴 미검출 시 None."""
+    """가장 큰 얼굴의 L2-정규화 512-d 임베딩. 얼굴 미검출 시 None.
+
+    검출 전에 가장자리를 ARCFACE_PAD_RATIO만큼 replicate 패딩한다. 이 데이터셋은 얼굴이
+    512x512 프레임을 거의 꽉 채우는 클로즈업이라, 패딩 없이는 SCRFD가 절반 이상을 놓친다
+    (실측: 패딩 0 → 11/30, 0.25 → 30/30, det_thresh=0.5 동일). det_thresh를 낮추는 대신
+    패딩을 쓰는 이유는 정밀도를 깎지 않기 때문. pred/ref에 동일 적용되므로 비교는 공정하다.
+    """
+    global _arcface_miss
     app = get_arcface()
     if app is None:
         return None
-    faces = app.get(cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR))
+    bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
+    p = int(bgr.shape[0] * ARCFACE_PAD_RATIO)
+    if p > 0:
+        bgr = cv2.copyMakeBorder(bgr, p, p, p, p, cv2.BORDER_REPLICATE)
+    faces = app.get(bgr)
     if not faces:
+        _arcface_miss += 1
         return None
     f = max(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
     return f.normed_embedding      # recognition 모델이 안 붙으면 None (호출부에서 NaN 처리)
@@ -565,6 +578,12 @@ def _safe_mean(vals):
     return sum(vs) / len(vs) if vs else None
 
 
+def _n_ok(vals):
+    """NaN/None을 제외한 유효 표본 수. 지표마다 다를 수 있어 별도로 보고한다
+    (예: ArcFace는 braid=뒤통수 샷이라 얼굴이 없어 대부분 NaN)."""
+    return sum(1 for v in vals if v is not None and not (isinstance(v, float) and math.isnan(v)))
+
+
 def _ci95(vals):
     """95% 신뢰구간 half-width (1.96·SD/√n). 표본<2면 None."""
     vs = [v for v in vals if v is not None and not (isinstance(v, float) and math.isnan(v))]
@@ -583,17 +602,22 @@ def build_summary(rows_braid, rows_unbraid, fid: dict) -> list[dict]:
     for label, pk, fk, higher, axis, paired, unit in SPEC_METRICS:
         r = {"label": label, "axis": axis, "paired": paired, "unit": unit,
              "braid": None, "braid_ci95": None, "unbraid": None, "unbraid_ci95": None,
-             "macro": None, "macro_ci95": None, "combined": None, "combined_std": None}
+             "macro": None, "macro_ci95": None, "combined": None, "combined_std": None,
+             "braid_n": None, "unbraid_n": None}
         if unit == "combined":
             r["combined"] = fid.get(fk)
             r["combined_std"] = fid.get(f"{fk}_std")   # KID만 존재 (subset 간 표준편차)
         else:
             if rows_braid is not None:
-                r["braid"]      = _safe_mean([x.get(pk) for x in rows_braid])
-                r["braid_ci95"] = _ci95([x.get(pk) for x in rows_braid])
+                vals = [x.get(pk) for x in rows_braid]
+                r["braid"]      = _safe_mean(vals)
+                r["braid_ci95"] = _ci95(vals)
+                r["braid_n"]    = _n_ok(vals)
             if rows_unbraid is not None:
-                r["unbraid"]      = _safe_mean([x.get(pk) for x in rows_unbraid])
-                r["unbraid_ci95"] = _ci95([x.get(pk) for x in rows_unbraid])
+                vals = [x.get(pk) for x in rows_unbraid]
+                r["unbraid"]      = _safe_mean(vals)
+                r["unbraid_ci95"] = _ci95(vals)
+                r["unbraid_n"]    = _n_ok(vals)
             if r["braid"] is not None and r["unbraid"] is not None:
                 r["macro"] = (r["braid"] + r["unbraid"]) / 2
                 # 독립 두 그룹 평균의 평균 → CI = ½·√(CI_b² + CI_u²)
@@ -631,6 +655,15 @@ def print_summary(summary: list[dict], tag: str, n_b: int, n_u: int):
     print("  · FID/KID=통합573만  · per-image=braid/unbraid/macro (모두 ±CI95)")
     print("  · KID는 ±subset 표준편차. 리포트에 subset_size 명기 의무(위 로그 참고)")
     print("  · 측정 영역: matte 내부 / 경계밴드 B(k) / matte 외부(bg) / 얼굴(ArcFace) — R2 스펙")
+    if _arcface_miss:
+        af = next((r for r in summary if r["label"].startswith("ArcFace")), None)
+        detail = ""
+        if af is not None:
+            detail = (f"  유효 표본 braid={af['braid_n']}/{n_b}, unbraid={af['unbraid_n']}/{n_u}")
+        print(f"  · ⚠️ ArcFace 얼굴 미검출 {_arcface_miss}건 → NaN(평균에서 제외).{detail}")
+        print("    braid 원본은 대부분 뒤통수 샷이라 잴 얼굴이 없다 — 결손이 아니라 정의상 N/A다.")
+        print("    ArcFace는 unbraid 기준으로만 해석할 것(macro/combined에 섞어 읽지 말 것).")
+    # 지표마다 유효 n이 다를 수 있다 → CSV의 braid_n/unbraid_n 열을 함께 볼 것.
     print("  · run 간 유의차 확정은 scripts/stats_compare.py (paired t-test + Wilcoxon)")
 
 
@@ -639,7 +672,8 @@ def write_summary_csv(summary: list[dict], tag: str, path: Path):
         w = csv.writer(f)
         w.writerow(["metric", "axis", "paired", "unit",
                     "braid", "braid_ci95", "unbraid", "unbraid_ci95",
-                    "macro", "macro_ci95", "combined573", "combined_std"])
+                    "macro", "macro_ci95", "combined573", "combined_std",
+                    "braid_n", "unbraid_n"])
         for r in summary:
             w.writerow([
                 r["label"], r["axis"], r["paired"], r["unit"],
@@ -647,6 +681,7 @@ def write_summary_csv(summary: list[dict], tag: str, path: Path):
                 _fmt(r["unbraid"]), _fmt(r["unbraid_ci95"]),
                 _fmt(r["macro"]),   _fmt(r["macro_ci95"]),
                 _fmt(r["combined"]), _fmt(r.get("combined_std")),
+                r.get("braid_n"), r.get("unbraid_n"),
             ])
 
 
@@ -832,6 +867,7 @@ def _save_and_report(summary, rows, tag, out, n_b, n_u):
 
 
 def main():
+    global SPLITS      # --data-root로 교체 가능 (아래)
     parser = argparse.ArgumentParser(description="Evaluate braid/unbraid/combined split (7-metric spec).")
     parser.add_argument("--split",       required=True, choices=list(SPLITS.keys()),
                         help="'braid', 'unbraid', 'combined'")
@@ -849,6 +885,11 @@ def main():
     parser.add_argument("--sketch-dir-unbraid", default=None,
                         help="unbraid split용 sketch 디렉토리 오버라이드. "
                              "combined 모드 전용. 미지정 시 --sketch-dir 값 사용.")
+    parser.add_argument("--data-root",   default=None,
+                        help="GT/matte/sketch 루트 (기본: dataset/). "
+                             "{root}/{split}/{img|matte|sketch}/test/ 레이아웃을 전제한다. "
+                             "원본이 플랫하게 놓여 있거나 파일명이 어긋날 때 심볼릭 링크로 "
+                             "정규화한 스테이징 디렉터리를 지정하는 용도.")
     parser.add_argument("--face-dir",    default=None,
                         help="ArcFace 기준 얼굴 이미지 디렉터리. 미지정 시 GT(=same-identity "
                              "ceiling). cross-id 평가에서는 experiment_cross_id/face_links/{type} "
@@ -861,6 +902,10 @@ def main():
                         help="계산할 지표 (쉼표 구분). 기본: 전체. "
                              f"선택 가능: {','.join(sorted(ALL_METRICS))}")
     args = parser.parse_args()
+
+    if args.data_root:
+        SPLITS = build_splits(Path(args.data_root).resolve())
+        print(f"data-root: {args.data_root}")
 
     suffix             = args.pred_suffix
     sketch_dir         = Path(args.sketch_dir)         if args.sketch_dir         else None
