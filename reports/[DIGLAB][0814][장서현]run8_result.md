@@ -8,7 +8,7 @@
 **합의 사항 → 상태**
 - [완료] run8_phase1 40epoch, run8_phase2 epoch20 수동 정지
 - [완료] run7/run8 epoch15·20·40 정량 비교 및 정성표 작성
-- [진행 중] GT 방향오차·seed 불일치 측정(n=50, seed 1/2/3/42), 30분 후 추가 예정
+- [진행 중] GT 방향오차·seed 불일치 측정(n=573, seed 1/2/3/42)
 
 **이번 결과 / 막힌 것 / 다음**
 - 결과: run8_ep20은 run7_ep20 대비 PSNR 16.97→17.21, PSNR_bg 45.14→45.37로 상승했지만 Hair FID 33.68→35.67, KID_hair 0.0029→0.0048로 하락
@@ -99,8 +99,7 @@ run7_ep20이 우세한 지표 — Hair FID 33.68<35.67, KID_hair 0.0029<0.0048, 
 즉 **리얼리즘·색상·경계 지표는 run7이, 화질·배경보존은 run8이 근소 우세** — 어느 한쪽이 전 지표를 이기지 않는다.
 
 
-🔴 **진행 중**: run8_phase2의 GT 방향오차·seed 불일치(run5부터 써온 structure-tensor 방식, 이 리포트 작성 시점 기준 측정 중(n=50, seed 1/2/3/42,
-조건은 위 정량지표 조건과 동일 — CRG1.5+BLD+Pixel Matte-Blend+Feather0+gate1.0). 완료되는대로 추가 예정
+🔴 **진행 중**: run8_phase2의 GT 방향오차·seed 불일치(run5부터 써온 structure-tensor 방식, 이 리포트 작성 시점 기준 측정 중 — CRG1.5+BLD+Pixel Matte-Blend+Feather0+gate1.0). 완료되는대로 추가 예정
 
 
 ## 정성지표
