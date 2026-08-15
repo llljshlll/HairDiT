@@ -60,7 +60,7 @@ CRG 1.5 + BLD full (step 20) + Pixel Matte-Blend + Feathering OFF (0), gate_alph
 Sketch LPIPS ↓, Edge IoU ↑, Hair FID ↓, LPIPS(GT) ↓, Boundary FID ↓, Boundary LPIPS ↓, Full-portrait FID ↓는 이전 방식(논문 방식) 그대로 사용. 
 GT 방향오차· seed 불일치도 run5부터 써온 방식 그대로 사용
 
-kid_hair, bnd_lpips_k8/k16(둘 중 더 좋은 걸로 추후 결정), psnr_bg/lpips_bg, arcface 신설. 
+kid_hair, bnd_lpips_k8/k16, psnr_bg/lpips_bg, arcface 신설. 
 
 ### 구조·색상·화질·리얼리즘 (matte 내부)
 
