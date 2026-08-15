@@ -102,11 +102,7 @@ run7_ep20이 우세한 지표 — Hair FID 33.68<35.67, KID_hair 0.0029<0.0048, 
 
 🔴 **진행 중**: run8_phase2의 GT 방향오차·seed 불일치(run5부터 써온 structure-tensor 방식,
 `scripts/eval/orientation_metric.py`)는 이 리포트 작성 시점 기준 측정 중이다(n=50, seed 1/2/3/42,
-조건은 위 정량지표 조건과 동일 — CRG1.5+BLD+Pixel Matte-Blend+Feather0+gate1.0). run7_phase2의
-기존 방향 지표(`reports/[DIGLAB][0812][장서현]run7_phase2_result.md` §정량지표)는 CRG2+BLD·구
-`pixel_blend_alpha` 조건으로 측정된 것이라 이번 CRG1.5 결과와 **직접 비교 불가** — run8 자체
-epoch15 vs 20 비교에만 쓰고, run7과의 비교는 run7도 CRG1.5로 재측정해야 성립한다. 완료되는 대로
-이 절에 추가.
+조건은 위 정량지표 조건과 동일 — CRG1.5+BLD+Pixel Matte-Blend+Feather0+gate1.0). 완료되는대로 추가 예정
 
 
 ## 정성지표
