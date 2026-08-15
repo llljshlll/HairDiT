@@ -82,7 +82,6 @@ kid_hair, bnd_lpips_k8/k16, psnr_bg/lpips_bg, arcface 신설.
 | run8 | 15 | 0.0060 | 0.0052 | 0.0214 | 2.3712 |
 | run8 | **20** | 0.0060 | 0.0053 | 0.0214 | 2.3988 |
 
-=> k=8이 k=16보다 더 나은 결과
 
 ### 배경 보존(matte 외부) · identity(얼굴) · 전역 조화
 
@@ -107,7 +106,6 @@ run7_ep20이 우세한 지표 — Hair FID 33.68<35.67, KID_hair 0.0029<0.0048, 
 
 ## 정성지표
 ### phase1
-색 학습이 run7보다 5epoch 정도 더디게 진행([run7 phase1 Colorful sketch](./[DIGLAB][0812][장서현]run7_phase1_result.md#colorful-sketch) 참고)
 #### gt sketch
 
 | image | sketch | epoch5 | epoch10 | epoch20 | epoch30 | epoch40 |
@@ -121,7 +119,7 @@ run7_ep20이 우세한 지표 — Hair FID 33.68<35.67, KID_hair 0.0029<0.0048, 
 | CM_1172 | <img src="../outputs/figure/sketch_gt/CM_1172.png" width="90"> | <img src="../outputs/0814/run8_phase1/epoch5/gt/gate1/CM_1172.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch10/gt/gate1/CM_1172.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch20/gt/gate1/CM_1172.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch30/gt/gate1/CM_1172.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch40/gt/gate1/CM_1172.png" width="100"> |
 
 #### Colorful sketch
-
+색 학습이 run7보다 5epoch 정도 더디게 진행([run7 phase1 Colorful sketch](./[DIGLAB][0812][장서현]run7_phase1_result.md#colorful-sketch) 참고)
 | image | sketch | epoch5 | epoch10 | epoch20 | epoch30 | epoch40 |
 |---|---|---|---|---|---|---|
 | CM_1007 | <img src="../data/unbraid_new/sketch/CM_1007.png" width="90"> | <img src="../outputs/0814/run8_phase1/epoch5/color/gate1/CM_1007.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch10/color/gate1/CM_1007.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch20/color/gate1/CM_1007.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch30/color/gate1/CM_1007.png" width="100"> | <img src="../outputs/0814/run8_phase1/epoch40/color/gate1/CM_1007.png" width="100"> |
