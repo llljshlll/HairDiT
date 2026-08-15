@@ -1,0 +1,14 @@
+# run7_mcs1 phase 1: Ours, gate off.
+# Same as run7_mcs2 except phase 1 starts from epoch 1.
+
+base: configs/run7_phase1.yaml
+
+training:
+  schedule: none
+  resume: null
+
+checkpointing:
+  output_dir: checkpoints/run7_mcs1_phase1/
+
+wandb:
+  tags: [run7, run7_mcs1, phase1, no-gate]

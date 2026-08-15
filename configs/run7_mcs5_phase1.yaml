@@ -1,0 +1,18 @@
+# run7_mcs5 phase 1: Raw Matte only, hard gate on.
+# zero_matte_feat disables Matte-CNN while Raw Matte remains enabled.
+
+base: configs/run7_phase1.yaml
+
+model:
+  zero_matte_feat: true
+
+training:
+  schedule: all
+  gate_alpha: 1.0
+  resume: null
+
+checkpointing:
+  output_dir: checkpoints/run7_mcs5_phase1/
+
+wandb:
+  tags: [run7, run7_mcs5, phase1, raw-matte-only, hard-gate]

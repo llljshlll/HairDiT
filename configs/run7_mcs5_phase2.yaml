@@ -1,0 +1,23 @@
+# run7_mcs5 phase 2: Raw Matte only, hard gate on.
+#
+# 🔴 템플릿은 configs/run7_phase2_rawstart.yaml (run7=mcs2의 실제 완주본)이다.
+#    configs/run7_phase2.yaml은 EMA 시작 버그로 epoch15에 조기종료된 1차 시도라 승계하지 않는다
+#    — LR 5.0e-6(미실행값)과 early_stopping 미명시(기본 True)가 딸려온다.
+base: configs/run7_phase2_rawstart.yaml
+
+model:
+  zero_matte_feat: true
+
+training:
+  schedule: all
+  gate_alpha: 1.0
+  learning_rate: 2.0e-5        # run7(mcs2) phase2 실행값. base와 같은 값이지만 명시.
+  early_stopping: false        # ⚠️ trainer 기본값이 True — 명시 필수(run7_phase2 1차가 epoch15 조기종료)
+  resume: null
+  resume_from: checkpoints/run7_mcs5_phase1/epoch_40.pth
+
+checkpointing:
+  output_dir: checkpoints/run7_mcs5_phase2/
+
+wandb:
+  tags: [run7, run7_mcs5, phase2, raw-matte-only, hard-gate]

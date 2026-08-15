@@ -1,0 +1,17 @@
+# run7_mcs3 phase 1: sketch only, gate off.
+# zero_matte_cond removes both Matte-CNN and Raw Matte conditioning.
+
+base: configs/run7_phase1.yaml
+
+model:
+  zero_matte_cond: true
+
+training:
+  schedule: none
+  resume: null
+
+checkpointing:
+  output_dir: checkpoints/run7_mcs3_phase1/
+
+wandb:
+  tags: [run7, run7_mcs3, phase1, sketch-only, no-gate]
