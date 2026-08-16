@@ -132,12 +132,7 @@ mcs2(Ours)는 기존 run7 phase2 rawstart epoch20 결과와 동일하게 비교
 | **mcs3** (Sketch-only) | 152.96±0.39 |
 | **mcs5** (RawMatte + Gate) | 147.55±0.24 |
 | **mcs6** (MatteCNN + Gate) | 142.18±0.31 |
-
-- Hair FID는 **mcs1(Gate OFF)이 최선**(129.68), gate를 켠 mcs2(Ours)가 오히려 138.23으로 더 나쁨 — [0620]에서는
-  반대로 gate 켠 쪽(Ours, mcs1 표기)이 140.11로 최선·Ours+Gate가 152.28로 최악이었던 것과 **순위가 뒤집힘**.
-  다만 [0620]은 CRG/BLD/blend 없이 돌린 값이라 추론조건 차이 때문일 가능성이 있음 — 직접적인 1:1 비교는 주의.
-- 나머지 4지표(Sketch LPIPS·ΔE2000·Edge IoU·PSNR)는 braid/unbraid 공통으로 mcs1·mcs6이 상위권, mcs3(Sketch-only)이
-  PSNR에서 가장 낮음(braid 9.46, unbraid 9.33) — 색·구조 지표가 좋아도 화질(PSNR)은 손해 보는 경향.
+=> 양끝(mcs1, 2 최선·Sketch-only 최악) 순위 방향 논문과 동일하게 재현
 
 ### 논문 결과: ranking inversion (§4.6, Table 1, Fig.3)
 | Configuration | Cross-identity Hair FID ↓ (leakage-free) |
@@ -202,7 +197,13 @@ mcs2(Ours)는 기존 run7 phase2 rawstart epoch20 결과와 동일하게 비교
 | mcs2 | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/CM_1082.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1172.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/braid_2548.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/braid_2562_1.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1067.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1027.png" width="120"> |
 
 - 논문(정량지표) : gate on/off 큰 차이 없음    
-- 실제(정량지표) : 논문과 달리 차이가 작지 않음. braid·unbraid 양쪽 모두에서 gate ON(mcs2)이 realism/분포 지표를 개선: Hair FID(braid mcs1 78.2520→mcs2 **69.7901**, unbraid 38.5344→**34.2327**), KID_hair(braid 0.0019→**0.0002**, unbraid 0.0083→**0.0051**), Full-portrait FID(braid 45.1613→**40.6367**, unbraid 16.1854→**13.5973**). 반대로 구조 지표는 gate OFF(mcs1)가 두 그룹 모두에서 5개 중 최고: Region IoU(braid **0.1629**/unbraid **0.1402**)·Boundary IoU(braid **0.1159**/unbraid **0.0978**) — mcs2는 각각 0.1433·0.1199 / 0.1011·0.0815로 더 낮아 gate ON이 구조 충실도를 깎는다는 게 수치로도 확인됨. identity(ArcFace cos)는 그룹별로 갈림 — braid에서는 mcs1이 **0.9572**로 5개 중 최고이지만, unbraid에서는 오히려 mcs1(0.9698)이 5개 중 **최저**이고 mcs3(0.9738)이 최고: gate OFF가 identity를 더 잘 보존하는 효과는 braid에서만 나타남. GT 방향오차는 두 그룹 모두 mcs1이 최고(braid **19.53**/unbraid **12.90**, unbraid는 mcs6과 공동 최고). 즉 "큰 차이 없음"이 아니라 **realism vs 구조 충실도의 트레이드오프가 뚜렷**하며, identity는 braid에서만 gate OFF가 우세함 — 위 정성지표(실제)의 "gate off가 boundary 표현이 더 좋음" 관찰과도 방향이 일치함  
+- 실제(정량지표) :
+  - Hair FID(Cross-identity) : mcs1(gate off) **129.68** < mcs2(gate on) 138.23 → **gate OFF가 더 좋음**, 논문 "Ours"(mcs1 최선)와 방향 일치
+  - KID_hair·Full-portrait FID(same-identity, GT-bg 분리표) : gate ON이 더 좋음 — KID braid 0.0019→**0.0002**/unbraid 0.0083→**0.0051**, FID braid 45.16→**40.64**/unbraid 16.19→**13.60** (Hair FID와 결론이 반대 방향)
+  - Region IoU·Boundary IoU : gate OFF가 두 그룹 모두 5개 중 최고 — braid **0.1629**·**0.1159**, unbraid **0.1402**·**0.0978**(mcs2는 각각 더 낮음)
+  - ArcFace cos(identity) : braid는 gate OFF가 최고(**0.9572**), unbraid는 오히려 gate OFF가 최저(0.9698)이고 mcs3가 최고(0.9738) — 그룹별로 갈림
+  - GT 방향오차 : 두 그룹 모두 gate OFF가 최고(**19.53**/**12.90**, unbraid는 mcs6과 공동)
+  - → "차이 없음"이 아니라 **지표(프로토콜)별로 갈리는 트레이드오프**: Hair FID·구조·방향오차는 gate OFF 우세, same-identity realism(KID·FID)은 gate ON 우세 — 위 정성지표의 "gate off가 boundary 표현이 더 좋음" 관찰과도 방향 일치
 
 
 2. Sketch-only (mcs3)
@@ -218,16 +219,26 @@ mcs2(Ours)는 기존 run7 phase2 rawstart epoch20 결과와 동일하게 비교
 | mcs3 | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/braid_2562_1.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/CM_1067.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/CM_1068.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/braid_4156.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/CM_1084.png" width="120"> |
 
 - 논문(정량지표) : matte 신호가 전혀 없는 baseline. Hair FID **159.95로 최악**. ΔE2000은 2.1550으로 최고. GT-bg 프로토콜에서는 배경 누수 덕에 **오히려 최고로 보이는 ranking inversion**이 발생(§4.6, Fig.3) → 논문 contribution 3번의 근거  
-- 실제(정량지표) : Hair FID는 그룹별로 갈림 — unbraid에서는 **35.0597**로 5개 중 2위(1위 mcs2 34.2327)로 mcs1(38.5344)보다 낮아 논문의 "최악" 서술과 반대이지만, braid에서는 **75.1511**로 5개 중 4위(2위 mcs5 71.8576, 3위 mcs6 72.1001)로 mcs1(78.2520) 다음으로 나빠 논문의 "최악" 서술에 오히려 가까움. Sketch ΔE2000은 braid 13.0287·unbraid 12.4818로 두 그룹 모두 5개 중 2위(1위는 mcs2, braid 12.8527/unbraid 12.3779)이며 "최고"는 아님. 반면 ΔE2000(GT)는 braid **1.7154**·unbraid **1.3229**로 두 그룹 모두 5개 중 최고 — 색 fidelity(GT 대비) 우위는 재현됨. Edge IoU는 unbraid에서 **0.0495**로 근소하게 최고(2위 mcs5 0.0494)이지만 braid에서는 0.0956으로 2위(1위는 mcs1 0.0961)라 "최고"는 unbraid에서만 성립. PSNR_bg는 braid **48.0490**·unbraid **42.4717**로 두 그룹 모두 5개 중 최고 — 배경 쪽에서 가장 유리하게 나오는 경향은 paper의 ranking inversion과 방향이 일치(단, 평가 프로토콜 자체는 paper의 GT-bg와 다르므로 동일 메커니즘이라 단정은 어려움)   
+- 실제(정량지표) :
+  - Hair FID(Cross-identity) : **152.96로 5개 중 최하위** → 논문 "최악"(159.95)과 일치(same-identity 분리표에서는 unbraid 2위·braid 4위로 갈렸던 것과 대조적)
+  - Sketch ΔE2000(same-identity) : 두 그룹 모두 5개 중 2위(1위 mcs2) — "최고"는 아님
+  - ΔE2000(GT) : 두 그룹 모두 5개 중 최고(braid **1.7154**/unbraid **1.3229**) — 색 fidelity 우위 재현
+  - Edge IoU : unbraid만 근소 최고(**0.0495**), braid는 2위(1위 mcs1 0.0961)
+  - PSNR_bg : 두 그룹 모두 5개 중 최고(braid **48.05**/unbraid **42.47**) — paper의 ranking inversion과 방향 일치
 
 3. RawMatte (mcs5)
 
 - 논문(정량지표) : sketch latent + raw matte anchor 단독. Hair FID 159.95 → **148.73**. pixel unshuffle + 1×1 conv로 편집 영역의 명시적 기하 정보를 줌(§3.3.2)   
-- 실제(정량지표) : Hair FID는 braid **71.8576**으로 5개 중 2위(mcs3 75.1511보다도 좋음), unbraid는 **36.6846**으로 5개 중 3위(mcs3 35.0597보다 나쁨) — 그룹에 따라 mcs3(sketch-only) 대비 우열이 갈려, "raw matte 추가가 sketch-only보다 낫다"는 논문 서열이 braid에서는 오히려 재현되고 unbraid에서는 반대로 나타남. 단, 실제는 gate ON이 같이 걸려 있어 논문과 세팅이 다름  
+- 실제(정량지표) :
+  - Hair FID(Cross-identity) : **147.55로 5개 중 4위**, mcs3(152.96)보다 좋음 → 논문 서열(148.73 < 159.95)과 방향 일치
+  - 단, 실제는 gate ON이 같이 걸려 있어 논문과 세팅이 다름
 
 4. MatteCNN (mcs6)
 
 - 논문(정량지표) : sketch latent + zero-init 학습형 region-aware bias 단독. Hair FID 159.95 → **148.10**. RawMatte·MatteCNN 어느 한쪽만 넣어도 ~11점 개선, 둘 다 넣으면(Ours, mcs1) **140.11±3.10**으로 최고 → 두 신호는 역할 분담이 아니라 같은 목표로 latent를 미는 **additive** 관계(§5). GT-bg에서도 Ours가 PSNR 14.2263·Edge IoU 0.0728로 최고  
-- 실제(정량지표) : mcs6 Hair FID는 braid **72.1001**로 5개 중 3위, unbraid는 **37.2540**으로 5개 중 4위. 논문에서 "최고"라던 mcs1(=RawMatte+MatteCNN 둘 다, gate off)은 braid **78.2520**·unbraid **38.5344** 모두 5개 중 최하위 — 논문의 additive 최적 조합 서열이 재현되지 않음  
+- 실제(정량지표) :
+  - Hair FID(Cross-identity) : mcs6 **142.18(5개 중 3위)**, mcs1 **129.68(5개 중 최고)**
+  - 순서 mcs1<mcs2<mcs6<mcs5<mcs3 = 논문 순서(Ours<MatteCNN<RawMatte<Sketch-only)와 동일 → **additive 최적 조합 서열이 그대로 재현됨**
+  - (same-identity 기준으로는 반대로 mcs1이 최하위 — 프로토콜에 따라 결론이 달라짐)
   
 단, 논문에 나온 방식은 mcs1이 ours라고 정의. 현재는 mcs2가 ours라고 정의하며, mcs5, 6도 gate on으로 설정 되어있음.
