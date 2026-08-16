@@ -106,7 +106,7 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 
 1. gate on/off
 <img src="../outputs/0814/gate_on_off_paper_figure.png" width="700">
-- 논문(정성지표) : ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의 strand-crossing·knot boundary 표현이 좋음
+- 논문(정성지표) : ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의 strand-crossing·knot boundary 표현이 좋음  
 - 실제(정성지표) : gate off면, boundary 표현이 더 좋음
 
 | | CM_1082(GT) | CM_1172(color) | braid_2548(GT) | braid_2562_1(color) |
@@ -114,26 +114,26 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 | mcs1 | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/gt/42/CM_1082.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/CM_1172.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/gt/42/braid_2548.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/braid_2562_1.png" width="120"> |
 | mcs2 | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/CM_1082.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1172.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/braid_2548.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/braid_2562_1.png" width="120"> |
 
-- 논문(정량지표) : gate on/off 큰 차이 없음  
-- 실제(정량지표) : 논문과 달리 차이가 작지 않음. Hair FID mcs1 37.89 → mcs2 **33.68**(4.2pt 개선, 논문에서 raw matte·matte-cnn 신호를 하나씩 추가할 때 개선폭 ~11pt의 절반 수준). KID_hair도 0.0055→**0.0029**로 거의 절반, Full-portrait FID도 17.60→**15.06**로 크게 개선 — realism/분포 지표에서는 gate ON이 뚜렷하게 좋음. 반대로 구조 지표는 gate OFF가 더 좋음: Region IoU **0.1445**·Boundary IoU **0.1012**로 5개 중 최고(mcs2는 이 두 지표 미계산·N/A), ArcFace cos도 **0.9635**로 최고(identity 보존), GT 방향오차도 **14.14**로 최고. 즉 "큰 차이 없음"이 아니라 **realism vs 구조 충실도의 트레이드오프가 뚜렷**하며, 위 정성지표(실제)의 "gate off가 boundary 표현이 더 좋음" 관찰과도 방향이 일치함
+- 논문(정량지표) : gate on/off 큰 차이 없음    
+- 실제(정량지표) : 논문과 달리 차이가 작지 않음. Hair FID mcs1 37.89 → mcs2 **33.68**(4.2pt 개선, 논문에서 raw matte·matte-cnn 신호를 하나씩 추가할 때 개선폭 ~11pt의 절반 수준). KID_hair도 0.0055→**0.0029**로 거의 절반, Full-portrait FID도 17.60→**15.06**로 크게 개선 — realism/분포 지표에서는 gate ON이 뚜렷하게 좋음. 반대로 구조 지표는 gate OFF가 더 좋음: Region IoU **0.1445**·Boundary IoU **0.1012**로 5개 중 최고(mcs2는 이 두 지표 미계산·N/A), ArcFace cos도 **0.9635**로 최고(identity 보존), GT 방향오차도 **14.14**로 최고. 즉 "큰 차이 없음"이 아니라 **realism vs 구조 충실도의 트레이드오프가 뚜렷**하며, 위 정성지표(실제)의 "gate off가 boundary 표현이 더 좋음" 관찰과도 방향이 일치함  
 
 
 2. Sketch-only (mcs3)
 <img src="../outputs/0814/sketch_only_paper_figure.png" width="400">
-- 논문(정성지표) : 텍스처가 거칠고 strand flow가 덜 일관됨(§4.5, Fig.2). 스트로크 색을 가장 문자 그대로 따라감(색 fidelity ↔ realism 트레이드오프, §5)  
-- 실제(정성지표) : 논문에서 제기된 것에 비해 텍스처가 거칠지 않고, GT image에서는 다른지표와 거의 구분할 수 없음, 색 학습이 가장 잘 되어보이고, 형광색 stroke에 대해 잘 표현함
+- 논문(정성지표) : 텍스처가 거칠고 strand flow가 덜 일관됨(§4.5, Fig.2). 스트로크 색을 가장 문자 그대로 따라감(색 fidelity ↔ realism 트레이드오프, §5)    
+- 실제(정성지표) : 논문에서 제기된 것에 비해 텍스처가 거칠지 않고, GT image에서는 다른지표와 거의 구분할 수 없음, 색 학습이 가장 잘 되어보이고, 형광색 stroke에 대해 잘 표현함  
 
 | | braid_2562_1(color) | CM_1067(color) | CM_1068(color) | braid_4156(color) |
 |---|---|---|---|---|
 | mcs3 | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/braid_2562_1.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/CM_1067.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/CM_1068.png" width="120"> | <img src="../outputs/0815/run7_mcs3_phase2/epoch20/color/seed42/braid_4156.png" width="120"> |
 | mcs2 | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/braid_2562_1.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1067.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1068.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/braid_4156.png" width="120"> |
 
-- 논문(정량지표) : matte 신호가 전혀 없는 baseline. Hair FID **159.95로 최악**. ΔE2000은 2.1550으로 최고. GT-bg 프로토콜에서는 배경 누수 덕에 **오히려 최고로 보이는 ranking inversion**이 발생(§4.6, Fig.3) → 논문 contribution 3번의 근거
-- 실제(정량지표) : Hair FID **35.14로 5개 중 2위**(1위 mcs2 33.68) — mcs1(37.89)보다도 낮아 논문의 "최악" 서술과 반대. Sketch ΔE2000(12.76)·ΔE2000(GT)(1.52)·Edge IoU(0.0726)는 실제로도 5개 중 최고 — 색 fidelity 우위는 재현됨. PSNR_bg도 45.26으로 5개 중 최고 — 배경 쪽에서 가장 유리하게 나오는 경향은 paper의 ranking inversion과 방향이 일치(단, 평가 프로토콜 자체는 paper의 GT-bg와 다르므로 동일 메커니즘이라 단정은 어려움)
+- 논문(정량지표) : matte 신호가 전혀 없는 baseline. Hair FID **159.95로 최악**. ΔE2000은 2.1550으로 최고. GT-bg 프로토콜에서는 배경 누수 덕에 **오히려 최고로 보이는 ranking inversion**이 발생(§4.6, Fig.3) → 논문 contribution 3번의 근거  
+- 실제(정량지표) : Hair FID **35.14로 5개 중 2위**(1위 mcs2 33.68) — mcs1(37.89)보다도 낮아 논문의 "최악" 서술과 반대. Sketch ΔE2000(12.76)·ΔE2000(GT)(1.52)·Edge IoU(0.0726)는 실제로도 5개 중 최고 — 색 fidelity 우위는 재현됨. PSNR_bg도 45.26으로 5개 중 최고 — 배경 쪽에서 가장 유리하게 나오는 경향은 paper의 ranking inversion과 방향이 일치(단, 평가 프로토콜 자체는 paper의 GT-bg와 다르므로 동일 메커니즘이라 단정은 어려움)   
 
 3. RawMatte (mcs5)
-- 논문(정량지표) : sketch latent + raw matte anchor 단독. Hair FID 159.95 → **148.73**. pixel unshuffle + 1×1 conv로 편집 영역의 명시적 기하 정보를 줌(§3.3.2)  
-- 실제(정량지표) : Hair FID **35.89로 5개 중 4위** — mcs3(sketch-only, 35.14)보다도 나빠 "raw matte 추가가 sketch-only보다 낫다"는 논문 서열과 반대. 단, 실제는 gate ON이 같이 걸려 있어 논문과 세팅이 다름
+- 논문(정량지표) : sketch latent + raw matte anchor 단독. Hair FID 159.95 → **148.73**. pixel unshuffle + 1×1 conv로 편집 영역의 명시적 기하 정보를 줌(§3.3.2)   
+- 실제(정량지표) : Hair FID **35.89로 5개 중 4위** — mcs3(sketch-only, 35.14)보다도 나빠 "raw matte 추가가 sketch-only보다 낫다"는 논문 서열과 반대. 단, 실제는 gate ON이 같이 걸려 있어 논문과 세팅이 다름  
 
 4. MatteCNN (mcs6)
 - 논문(정량지표) : sketch latent + zero-init 학습형 region-aware bias 단독. Hair FID 159.95 → **148.10**. RawMatte·MatteCNN 어느 한쪽만 넣어도 ~11점 개선, 둘 다 넣으면(Ours, mcs1) **140.11±3.10**으로 최고 → 두 신호는 역할 분담이 아니라 같은 목표로 latent를 미는 **additive** 관계(§5). GT-bg에서도 Ours가 PSNR 14.2263·Edge IoU 0.0728로 최고  
