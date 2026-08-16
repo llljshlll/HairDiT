@@ -97,18 +97,47 @@ mcs2(Ours)는 기존 run7 phase2 rawstart epoch20 결과와 동일하게 비교
 기존 논문 방식 사용([0620][서현택]color_sketch_3seed.md과 완전히 동일한 방법론   
 단, CRG 1.5 + BLD full (step 20) + Pixel Blend/Feathering OFF (0) 적용), 헤어 마스크 부분(matte)에 대해서만 평가 적용  
 
-### 결과
 ####  Braid (n=107)
-| 모델 | Sketch LPIPS↓ | Sketch ΔE px↓ | Edge IoU↑ | PSNR↑ |
+| 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | PSNR (hair) ↑ |
+|---|:---:|:---:|:---:|:---:|
+| **mcs1** (Gate OFF) | 0.4746±0.0037 | 11.55±0.04 | **0.0930±0.0002** | **10.55±0.11** |
+| **mcs2** (Ours) | 0.4430±0.0066 | 11.02±0.43 | 0.0894±0.0002 | 10.01±0.11 |
+| **mcs3** (Sketch-only) | 0.4575±0.0029 | **10.85±0.39** | 0.0871±0.0002 | 9.46±0.02 |
+| **mcs5** (RawMatte + Gate) | 0.4418±0.0080 | 12.81±0.89 | 0.0886±0.0004 | 9.84±0.11 |
+| **mcs6** (MatteCNN + Gate) | **0.4249±0.0067** | 11.69±0.56 | 0.0905±0.0004 | 9.71±0.10 |
 
 #### Unbraid (n=466)
-| 모델 | Sketch LPIPS↓ | Sketch ΔE px↓ | Edge IoU↑ | PSNR↑ |
+| 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | PSNR (hair) ↑ |
+|---|:---:|:---:|:---:|:---:|
+| **mcs1** (Gate OFF) | 0.6790±0.0059 | **11.71±0.32** | **0.0492±0.0005** | 10.03±0.13 |
+| **mcs2** (Ours) | 0.6639±0.0038 | 11.86±0.22 | 0.0480±0.0004 | 9.96±0.19 |
+| **mcs3** (Sketch-only) | 0.6602±0.0152 | 12.08±0.19 | 0.0481±0.0012 | 9.33±0.12 |
+| **mcs5** (RawMatte + Gate) | 0.6678±0.0105 | 12.39±0.39 | 0.0489±0.0008 | **10.04±0.17** |
+| **mcs6** (MatteCNN + Gate) | **0.6383±0.0052** | 12.00±0.08 | 0.0460±0.0005 | 9.70±0.13 |
 
 #### Macro-avg = (braid + unbraid) / 2
-| 모델 | Sketch LPIPS↓ | Sketch ΔE px↓ | Edge IoU↑ | PSNR↑ |
+| 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | PSNR (hair) ↑ |
+|---|:---:|:---:|:---:|:---:|
+| **mcs1** (Gate OFF) | 0.5768±0.0017 | 11.63±0.17 | **0.0711±0.0002** | **10.29±0.12** |
+| **mcs2** (Ours) | 0.5535±0.0014 | **11.44±0.27** | 0.0687±0.0002 | 9.98±0.15 |
+| **mcs3** (Sketch-only) | 0.5588±0.0063 | 11.46±0.15 | 0.0676±0.0006 | 9.39±0.07 |
+| **mcs5** (RawMatte + Gate) | 0.5548±0.0013 | 12.60±0.51 | 0.0687±0.0002 | 9.94±0.14 |
+| **mcs6** (MatteCNN + Gate) | **0.5315±0.0009** | 11.84±0.29 | 0.0682±0.0005 | 9.70±0.12 |
 
 #### Hair FID (통합 573, unpaired)
-| 모델 | Hair FID↓ |
+| 모델 | Hair FID ↓ |
+|---|:---:|
+| **mcs1** (Gate OFF) | **129.68±0.78** |
+| **mcs2** (Ours) | 138.23±1.12 |
+| **mcs3** (Sketch-only) | 152.96±0.39 |
+| **mcs5** (RawMatte + Gate) | 147.55±0.24 |
+| **mcs6** (MatteCNN + Gate) | 142.18±0.31 |
+
+- Hair FID는 **mcs1(Gate OFF)이 최선**(129.68), gate를 켠 mcs2(Ours)가 오히려 138.23으로 더 나쁨 — [0620]에서는
+  반대로 gate 켠 쪽(Ours, mcs1 표기)이 140.11로 최선·Ours+Gate가 152.28로 최악이었던 것과 **순위가 뒤집힘**.
+  다만 [0620]은 CRG/BLD/blend 없이 돌린 값이라 추론조건 차이 때문일 가능성이 있음 — 직접적인 1:1 비교는 주의.
+- 나머지 4지표(Sketch LPIPS·ΔE2000·Edge IoU·PSNR)는 braid/unbraid 공통으로 mcs1·mcs6이 상위권, mcs3(Sketch-only)이
+  PSNR에서 가장 낮음(braid 9.46, unbraid 9.33) — 색·구조 지표가 좋아도 화질(PSNR)은 손해 보는 경향.
 
 ### 논문 결과: ranking inversion (§4.6, Table 1, Fig.3)
 | Configuration | Cross-identity Hair FID ↓ (leakage-free) |
