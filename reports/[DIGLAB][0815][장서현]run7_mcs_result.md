@@ -105,7 +105,9 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 수치는 Cross-identity Hair FID(§4.6, Table 1, leakage-free, 3 seed) / GT-bg(§4.7, Table 2) 기준.
 
 1. gate on/off
+
 <img src="../outputs/0814/gate_on_off_paper_figure.png" width="700">
+
 - 논문(정성지표) : ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의 strand-crossing·knot boundary 표현이 좋음    
 - 실제(정성지표) : gate off면, boundary 표현이 더 좋음
 
@@ -119,7 +121,9 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 
 
 2. Sketch-only (mcs3)
+
 <img src="../outputs/0814/sketch_only_paper_figure.png" width="400">
+
 - 논문(정성지표) : 텍스처가 거칠고 strand flow가 덜 일관됨(§4.5, Fig.2). 스트로크 색을 가장 문자 그대로 따라감(색 fidelity ↔ realism 트레이드오프, §5)    
 - 실제(정성지표) : 논문에서 제기된 것에 비해 텍스처가 거칠지 않고, GT image에서는 다른지표와 거의 구분할 수 없음, 색 학습이 가장 잘 되어보이고, 형광색 stroke에 대해 잘 표현함  
 
@@ -132,10 +136,12 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 - 실제(정량지표) : Hair FID **35.14로 5개 중 2위**(1위 mcs2 33.68) — mcs1(37.89)보다도 낮아 논문의 "최악" 서술과 반대. Sketch ΔE2000(12.76)·ΔE2000(GT)(1.52)·Edge IoU(0.0726)는 실제로도 5개 중 최고 — 색 fidelity 우위는 재현됨. PSNR_bg도 45.26으로 5개 중 최고 — 배경 쪽에서 가장 유리하게 나오는 경향은 paper의 ranking inversion과 방향이 일치(단, 평가 프로토콜 자체는 paper의 GT-bg와 다르므로 동일 메커니즘이라 단정은 어려움)   
 
 3. RawMatte (mcs5)
+
 - 논문(정량지표) : sketch latent + raw matte anchor 단독. Hair FID 159.95 → **148.73**. pixel unshuffle + 1×1 conv로 편집 영역의 명시적 기하 정보를 줌(§3.3.2)   
 - 실제(정량지표) : Hair FID **35.89로 5개 중 4위** — mcs3(sketch-only, 35.14)보다도 나빠 "raw matte 추가가 sketch-only보다 낫다"는 논문 서열과 반대. 단, 실제는 gate ON이 같이 걸려 있어 논문과 세팅이 다름  
 
 4. MatteCNN (mcs6)
+
 - 논문(정량지표) : sketch latent + zero-init 학습형 region-aware bias 단독. Hair FID 159.95 → **148.10**. RawMatte·MatteCNN 어느 한쪽만 넣어도 ~11점 개선, 둘 다 넣으면(Ours, mcs1) **140.11±3.10**으로 최고 → 두 신호는 역할 분담이 아니라 같은 목표로 latent를 미는 **additive** 관계(§5). GT-bg에서도 Ours가 PSNR 14.2263·Edge IoU 0.0728로 최고  
 - 실제(정량지표) : mcs6 Hair FID **36.35로 5개 중 3위**. 논문에서 "최고"라던 mcs1(=RawMatte+MatteCNN 둘 다, gate off)은 실제로 Hair FID **37.89로 5개 중 최하위** — 논문의 additive 최적 조합 서열이 재현되지 않음  
   
