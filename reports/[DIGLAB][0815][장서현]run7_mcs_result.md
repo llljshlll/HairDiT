@@ -106,7 +106,7 @@ mcs5의 Hair FID/KID/Boundary FID/Full-portrait FID는 원격 573장 평가 이�
 
 1. gate on/off
 <img src="../outputs/0814/gate_on_off_paper_figure.png" width="700">
-- 논문(정성지표) : ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의 strand-crossing·knot boundary 표현이 좋음  
+- 논문(정성지표) : ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의 strand-crossing·knot boundary 표현이 좋음    
 - 실제(정성지표) : gate off면, boundary 표현이 더 좋음
 
 | | CM_1082(GT) | CM_1172(color) | braid_2548(GT) | braid_2562_1(color) |
