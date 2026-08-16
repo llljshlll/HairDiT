@@ -18,7 +18,7 @@
 따라서 현재 학습된 run7은 run7_mcs2라 칭한다.
 
 모든 방식은 run7_mcs2의 설정을 따른다.
-- run7_mcs1은 run7_mcs2에서 gate만 끈 설정이다. phase1 resume 여부를 제외한 다른 설정은 변경하지 않는다. (run7_mcs2는 run5_1와 구조가 완전히 똑같아 run5_1와 phase1 epoch15 에서 resume하여 이어 진행했음, 이번 실험은 모든 모델 다 처음부터 학습진행)
+- run7_mcs1은 run7_mcs2에서 gate만 끈 설정이다. phase1 resume 여부를 제외한 다른 설정은 변경하지 않는다. (run7_mcs2는 run5_1와 구조가 완전히 똑같아 run5_1 phase1 epoch15 에서 resume하여 이어 진행했음, 이번 실험은 모든 모델 다 처음부터 학습진행)
 - run7_mcs3은 matte가 없으므로 gate 없이 진행하며, run7_mcs2에서 입력으로 sketch만 사용한다.
 - run7_mcs5와 run7_mcs6은 기존 방식과 달리 gate on(hard gate)으로 진행한다.
 
