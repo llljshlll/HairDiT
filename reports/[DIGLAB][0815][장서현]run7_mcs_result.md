@@ -25,7 +25,7 @@
 ## 정량지표
 Unbraid: 466장, Braid: 107장, 총 573장 사용  
 CRG 1.5 + BLD full (step 20) + Pixel Matte-Blend + Feathering OFF (0), epoch20 기준  
-mcs2(Ours)는 기존 run7 phase2 rawstart epoch20 결과와 동일하게 비교
+mcs2(Ours)는 기존 run7 phase2 epoch20 결과와 동일하게 비교
 
 ### braid (n=107)
 
