@@ -9,7 +9,7 @@ CRG 1.5 + BLD full (step 20) + Pixel Matte-Blend + Feathering OFF (0), epoch20 �
 ### 4-seed
 #### braid (n=107)
 seed 1, 2, 3, 42의 평균
-> mcs2 행은 이전 결과가 `--recolor_from_gt` 없이 생성되어(스케치의 원본 스트로크 색(무지개색)을 그대로 사용) mcs1/3/5/6과 조건이 달랐던 것으로 확인되어 폐기. 체크포인트(`checkpoints/run7_phase2_rawstart/epoch_20_infer.pth`)·CRG 1.5·BLD full·Pixel Matte-Blend는 동일하게 유지하고 `--recolor_from_gt`만 추가해 mcs1/3/5/6과 100% 동일 조건으로 재생성 후 재평가함(seed42 결과가 8/15 리포트 원본값과 정확히 일치 — 원본 단일시드 값 자체는 처음부터 정확했음을 재확인). 기존 mcs1/3/5/6도 문제 없음을 한 번 더 확인
+> mcs2 행은 이전 결과가 `--recolor_from_gt` 없이 생성되어(스케치의 원본 스트로크 색(무지개색)을 그대로 사용) mcs1/3/5/6과 조건이 달랐던 것으로 확인되어 폐기. CRG 1.5·BLD full·Pixel Matte-Blend는 동일하게 유지하고 `--recolor_from_gt`만 추가해 mcs1/3/5/6과 100% 동일 조건으로 재생성 후 재평가함(아래 단일시드 평가 값은 처음부터 정확했음을 재확인, 기존 mcs1/3/5/6도 문제 없음을 재확인)
 
 ##### 구조·색상·화질·리얼리즘 (matte 내부에서만 진행)
 
