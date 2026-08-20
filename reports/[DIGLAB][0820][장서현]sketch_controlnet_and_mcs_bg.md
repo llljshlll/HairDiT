@@ -41,14 +41,14 @@ seed별로 차이 큼
 
 
 ----
-2. 배경에 따른 mcs1 / mcs2의 결과 변화
+## 2. 배경에 따른 mcs1 / mcs2의 결과 변화
 
 **공통 인퍼런스 조건**
 - `--bld_mode full` — 매 denoising 스텝마다 matte 바깥을 배경의 noised latent로 블렌딩(latent 단계 배경 합성)
 - `--crg_scale 1.5`
 - `--pixel_blend` **미사용**(off) — decode 후 pixel-space 최종 matte blending은 적용 안 함, `vae.decode()` 결과를 그대로 저장
 
-## mcs1
+### mcs1
 
 | 배경 | Seed 42 | Seed 1 | Seed 2 | Seed 3 |
 |---|---|---|---|---|
@@ -56,7 +56,7 @@ seed별로 차이 큼
 | block — <img src="../dataset/test/img/block.png" width="90"> | <img src="../outputs/0820/red_test/mcs1_block/42/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_block/1/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_block/2/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_block/3/braid_4156.png" width="180"> |
 | river — <img src="../dataset/test/img/river.png" width="90"> | <img src="../outputs/0820/red_test/mcs1_river/42/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_river/1/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_river/2/braid_4156.png" width="180"> | <img src="../outputs/0820/red_test/mcs1_river/3/braid_4156.png" width="180"> |
 
-## mcs2
+### mcs2
 
 | 배경 | Seed 42 | Seed 1 | Seed 2 | Seed 3 |
 |---|---|---|---|---|
