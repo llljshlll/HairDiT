@@ -10,9 +10,9 @@
 
 | 항목 | 값 |
 |---|---|
-| Base | stabilityai/stable-diffusion-3.5-medium (T5-XXL 제외, VRAM 절약) |
+| Base | stabilityai/stable-diffusion-3.5-medium |
 | ControlNet | tensorart/SD3.5M-Controlnet-Canny |
-| 배경 유지 | BLD full — 매 스텝 matte 바깥을 `(1-σ)·x0_bg+σ·noise`로 블렌딩, decode 후 pixel-space 최종 합성(matte, feather=2px) 추가 |
+| 배경 유지 | BLD — 매 스텝 matte 바깥을 `(1-σ)·x0_bg+σ·noise`로 블렌딩, decode 후 pixel-space 최종 합성 추가(pixel blending) |
 | 컨트롤 이미지 | sketch 원본을 canny로 바꾸지 않고 그대로 사용 |
 | controlnet_conditioning_scale | 0.8 (tensorart/SD3.5M-Controlnet-Canny 모델 카드 공식 예시값) |
 | 해상도 / step | 512×512 / 30 step (tensorart 모델 카드 공식 예시값) |
