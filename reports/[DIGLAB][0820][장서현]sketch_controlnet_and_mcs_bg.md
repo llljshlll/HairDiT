@@ -6,7 +6,7 @@
 ## 1. controlNet
 
 - 사용 모델: tensorart/SD3.5M-Controlnet-Canny — HairDiT처럼 자체 데이터로 새로 학습시킨 것이 아니라, sketch 컨트롤 + 텍스트 프롬프트만으로 사실적인 이미지를 생성하도록 이미 학습되어 커뮤니티에 공개돼 있는 off-the-shelf ControlNet
-- 목적: 이런 기성 ControlNet에 density sketch를 컨트롤 이미지로, "사실적인 머리" 계열 프롬프트를 태워 넣었을 때 얼마나 그럴듯한 헤어가 나오는지 정성 평가
+- 목적: 공개된 ControlNet에 density sketch를 컨트롤 이미지로, "사실적인 머리" 계열 프롬프트를 넣었을 때 얼마나 그럴듯한 헤어가 나오는지 정성 평가
 
 | 항목 | 값 |
 |---|---|
