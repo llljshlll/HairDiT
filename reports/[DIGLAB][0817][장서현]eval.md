@@ -182,3 +182,14 @@ seed 1, 2, 42의 평균
 | **mcs3** (Sketch-only) | 152.96±0.39 |
 | **mcs5** (RawMatte + Gate) | 147.55±0.24 |
 | **mcs6** (MatteCNN + Gate) | 142.18±0.31 |
+
+#### Hair KID (통합 573, unpaired)
+| 모델 | KID_hair ↓ |
+|---|:---:|
+| **mcs1** (Gate OFF) | **0.0920±0.0012** |
+| **mcs2** (Ours) | 0.1001±0.0012 |
+| **mcs3** (Sketch-only) | 0.1177±0.0006 |
+| **mcs5** (RawMatte + Gate) | 0.1094±0.0004 |
+| **mcs6** (MatteCNN + Gate) | 0.1033±0.0002 |
+
+=> Hair FID와 순위(mcs1<mcs2<mcs6<mcs5<mcs3)가 완전히 동일
