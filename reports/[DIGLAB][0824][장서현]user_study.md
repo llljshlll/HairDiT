@@ -87,100 +87,280 @@ Color Fidelity는 Sketch-only(mcs3)가 1위
 
 #### 1. GT · unbraid · CM_1121
 - 정답 키: A=Ours, B=Sketch-only, C=VividHair, D=HairCLIPv2, E=SHS
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 8/33 | 12/33 | 6/33 |
+| SHS | 0/33 | 1/33 | 0/33 |
+| HairCLIPv2 | 2/33 | 0/33 | 3/33 |
+| VividHair | 20/33 | 15/33 | 19/33 |
+| Ours | **3/33** | **5/33** | **5/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1121.png" alt="1. GT - CM_1121 - unbraid" width="480">
 
 #### 2. COLOR · unbraid · CM_1028
 - 정답 키: A=Sketch-only, B=Ours, C=VividHair, D=SHS, E=HairCLIPv2
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 3/33 | 7/33 | 11/33 |
+| SHS | 1/33 | 4/33 | 6/33 |
+| HairCLIPv2 | 6/33 | 4/33 | 1/33 |
+| VividHair | 5/33 | 2/33 | 4/33 |
+| Ours | **18/33** | **16/33** | **11/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1028.png" alt="2. COLOR - CM_1028 - unbraid" width="480">
 
 #### 3. GT · braid · braid_2548
 - 정답 키: A=HairCLIPv2, B=SHS, C=Ours, D=VividHair, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 1/33 | 4/33 | 10/33 |
+| SHS | 10/33 | 11/33 | 9/33 |
+| HairCLIPv2 | 0/33 | 0/33 | 0/33 |
+| VividHair | 4/33 | 0/33 | 0/33 |
+| Ours | **18/33** | **18/33** | **14/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/braid_2548.png" alt="3. GT - braid_2548 - braid" width="480">
 
 #### 4. COLOR · unbraid · CM_1055
 - 정답 키: A=Sketch-only, B=SHS, C=HairCLIPv2, D=VividHair, E=Ours
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 3/33 | 12/33 | 8/33 |
+| SHS | 7/33 | 4/33 | 15/33 |
+| HairCLIPv2 | 10/33 | 4/33 | 2/33 |
+| VividHair | 1/33 | 0/33 | 0/33 |
+| Ours | **12/33** | **13/33** | **8/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1055.png" alt="4. COLOR - CM_1055 - unbraid" width="480">
 
 #### 5. COLOR · braid · braid_2562_1_2
 - 정답 키: A=Sketch-only, B=HairCLIPv2, C=VividHair, D=SHS, E=Ours
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 3/33 | 4/33 | 9/33 |
+| SHS | 3/33 | 6/33 | 7/33 |
+| HairCLIPv2 | 7/33 | 1/33 | 2/33 |
+| VividHair | 4/33 | 2/33 | 0/33 |
+| Ours | **16/33** | **20/33** | **15/33** |
 
 <img src="../outputs/0824/user_study/color/grid/braid_2562_1_2.png" alt="5. COLOR - braid_2562_1_2 - braid" width="480">
 
 #### 6. GT · braid · braid_3276
 - 정답 키: A=Sketch-only, B=HairCLIPv2, C=VividHair, D=SHS, E=Ours
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 14/33 | 18/33 | 20/33 |
+| SHS | 4/33 | 7/33 | 5/33 |
+| HairCLIPv2 | 0/33 | 0/33 | 1/33 |
+| VividHair | 3/33 | 0/33 | 1/33 |
+| Ours | **12/33** | **8/33** | **6/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/braid_3276.png" alt="6. GT - braid_3276 - braid" width="480">
 
 #### 7. COLOR · unbraid · CM_1133
 - 정답 키: A=SHS, B=VividHair, C=Sketch-only, D=Ours, E=HairCLIPv2
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 8/33 | 12/33 | 17/33 |
+| SHS | 2/33 | 2/33 | 3/33 |
+| HairCLIPv2 | 2/33 | 0/33 | 0/33 |
+| VividHair | 4/33 | 3/33 | 3/33 |
+| Ours | **17/33** | **16/33** | **10/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1133.png" alt="7. COLOR - CM_1133 - unbraid" width="480">
 
 #### 8. GT · unbraid · CM_1067_12
 - 정답 키: A=Ours, B=HairCLIPv2, C=SHS, D=VividHair, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 13/33 | 12/33 | 12/33 |
+| SHS | 2/33 | 4/33 | 7/33 |
+| HairCLIPv2 | 6/33 | 3/33 | 2/33 |
+| VividHair | 3/33 | 0/33 | 2/33 |
+| Ours | **9/33** | **14/33** | **10/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1067_12.png" alt="8. GT - CM_1067_12 - unbraid" width="480">
 
 #### 9. COLOR · braid · braid_4276
 - 정답 키: A=VividHair, B=HairCLIPv2, C=Ours, D=SHS, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 1/33 | 3/33 | 11/33 |
+| SHS | 4/33 | 5/33 | 5/33 |
+| HairCLIPv2 | 1/33 | 0/33 | 0/33 |
+| VividHair | 3/33 | 0/33 | 0/33 |
+| Ours | **24/33** | **25/33** | **17/33** |
 
 <img src="../outputs/0824/user_study/color/grid/braid_4276.png" alt="9. COLOR - braid_4276 - braid" width="480">
 
 #### 10. COLOR · braid · braid_4212
 - 정답 키: A=VividHair, B=HairCLIPv2, C=Sketch-only, D=SHS, E=Ours
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 9/33 | 10/33 | 21/33 |
+| SHS | 0/33 | 2/33 | 6/33 |
+| HairCLIPv2 | 1/33 | 1/33 | 0/33 |
+| VividHair | 0/33 | 0/33 | 0/33 |
+| Ours | **23/33** | **20/33** | **6/33** |
 
 <img src="../outputs/0824/user_study/color/grid/braid_4212.png" alt="10. COLOR - braid_4212 - braid" width="480">
 
 #### 11. COLOR · unbraid · CM_1215
 - 정답 키: A=SHS, B=HairCLIPv2, C=VividHair, D=Sketch-only, E=Ours
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 7/33 | 10/33 | 18/33 |
+| SHS | 1/33 | 1/33 | 1/33 |
+| HairCLIPv2 | 3/33 | 0/33 | 0/33 |
+| VividHair | 2/33 | 6/33 | 2/33 |
+| Ours | **20/33** | **16/33** | **12/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1215.png" alt="11. COLOR - CM_1215 - unbraid" width="480">
 
 #### 12. GT · unbraid · CM_1027
 - 정답 키: A=HairCLIPv2, B=VividHair, C=Ours, D=Sketch-only, E=SHS
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 12/33 | 15/33 | 16/33 |
+| SHS | 0/33 | 0/33 | 1/33 |
+| HairCLIPv2 | 7/33 | 2/33 | 2/33 |
+| VividHair | 6/33 | 9/33 | 8/33 |
+| Ours | **8/33** | **7/33** | **6/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1027.png" alt="12. GT - CM_1027 - unbraid" width="480">
 
 #### 13. GT · unbraid · CM_1151
 - 정답 키: A=Ours, B=HairCLIPv2, C=SHS, D=VividHair, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 3/33 | 2/33 | 3/33 |
+| SHS | 6/33 | 8/33 | 12/33 |
+| HairCLIPv2 | 8/33 | 8/33 | 8/33 |
+| VividHair | 15/33 | 8/33 | 5/33 |
+| Ours | **1/33** | **7/33** | **5/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1151.png" alt="13. GT - CM_1151 - unbraid" width="480">
 
 #### 14. COLOR · unbraid · CM_1139
 - 정답 키: A=VividHair, B=Ours, C=Sketch-only, D=HairCLIPv2, E=SHS
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 12/33 | 20/33 | 26/33 |
+| SHS | 0/33 | 1/33 | 2/33 |
+| HairCLIPv2 | 6/33 | 2/33 | 1/33 |
+| VividHair | 1/33 | 1/33 | 0/33 |
+| Ours | **14/33** | **9/33** | **4/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1139.png" alt="14. COLOR - CM_1139 - unbraid" width="480">
 
 #### 15. GT · braid · wavy_753
 - 정답 키: A=Sketch-only, B=HairCLIPv2, C=Ours, D=SHS, E=VividHair
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 27/33 | 27/33 | 26/33 |
+| SHS | 0/33 | 0/33 | 0/33 |
+| HairCLIPv2 | 0/33 | 2/33 | 0/33 |
+| VividHair | 3/33 | 0/33 | 0/33 |
+| Ours | **3/33** | **4/33** | **7/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/wavy_753.png" alt="15. GT - wavy_753 - braid" width="480">
 
 #### 16. GT · unbraid · CM1033
 - 정답 키: A=VividHair, B=HairCLIPv2, C=SHS, D=Ours, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 10/33 | 19/33 | 20/33 |
+| SHS | 4/33 | 2/33 | 3/33 |
+| HairCLIPv2 | 3/33 | 3/33 | 2/33 |
+| VividHair | 11/33 | 4/33 | 3/33 |
+| Ours | **5/33** | **5/33** | **5/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1033.png" alt="16. GT - CM1033 - unbraid" width="480">
 
 #### 17. COLOR · braid · braid_4156
 - 정답 키: A=Ours, B=Sketch-only, C=VividHair, D=SHS, E=HairCLIPv2
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 10/33 | 16/33 | 17/33 |
+| SHS | 2/33 | 4/33 | 5/33 |
+| HairCLIPv2 | 0/33 | 0/33 | 0/33 |
+| VividHair | 0/33 | 1/33 | 1/33 |
+| Ours | **21/33** | **12/33** | **10/33** |
 
 <img src="../outputs/0824/user_study/color/grid/braid_4156.png" alt="17. COLOR - braid_4156 - braid" width="480">
 
 #### 18. GT · unbraid · CM_1009
 - 정답 키: A=Ours, B=HairCLIPv2, C=VividHair, D=SHS, E=Sketch-only
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 11/33 | 9/33 | 11/33 |
+| SHS | 1/33 | 5/33 | 1/33 |
+| HairCLIPv2 | 4/33 | 3/33 | 3/33 |
+| VividHair | 11/33 | 4/33 | 6/33 |
+| Ours | **6/33** | **12/33** | **12/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/CM_1009.png" alt="18. GT - CM_1009 - unbraid" width="480">
 
 #### 19. COLOR · unbraid · CM_1007
 - 정답 키: A=Ours, B=VividHair, C=SHS, D=Sketch-only, E=HairCLIPv2
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 2/33 | 6/33 | 10/33 |
+| SHS | 1/33 | 3/33 | 3/33 |
+| HairCLIPv2 | 6/33 | 0/33 | 0/33 |
+| VividHair | 2/33 | 1/33 | 2/33 |
+| Ours | **22/33** | **23/33** | **18/33** |
 
 <img src="../outputs/0824/user_study/color/grid/CM_1007.png" alt="19. COLOR - CM_1007 - unbraid" width="480">
 
 #### 20. GT · braid · wavy_749
 - 정답 키: A=Ours, B=HairCLIPv2, C=Sketch-only, D=VividHair, E=SHS
+- 집계 (33명):
+
+| Method | Hair Realism | Structure Fidelity | Color Fidelity |
+|---|---|---|---|
+| Sketch-only | 23/33 | 24/33 | 24/33 |
+| SHS | 0/33 | 0/33 | 0/33 |
+| HairCLIPv2 | 3/33 | 1/33 | 1/33 |
+| VividHair | 2/33 | 0/33 | 1/33 |
+| Ours | **5/33** | **8/33** | **7/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/wavy_749.png" alt="20. GT - wavy_749 - braid" width="480">
