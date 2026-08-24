@@ -364,3 +364,29 @@ Color Fidelity는 Sketch-only(mcs3)가 1위
 | Ours | **5/33** | **8/33** | **7/33** |
 
 <img src="../outputs/0824/user_study/gt/grid/wavy_749.png" alt="20. GT - wavy_749 - braid" width="480">
+
+## 쌍별 연관성 검정 (Pairwise Association) · 3항목 동시 일치도 (Multi-way Consistency)
+
+33명 × 20세트 = 660개 응답 단위(각 단위 = Hair Realism/Structure Fidelity/Color Fidelity 3개 선택의 묶음) 전체를 대상으로 계산. "3문항이 서로 독립적으로 다른 것을 측정하는지, 아니면 응답자가 그냥 하나의 전반적 선호로 3문항을 동일하게 찍는 경향(halo effect)이 있는지"를 확인하기 위함.
+
+### 쌍별 연관성 검정 (Pairwise Association)
+
+문항 쌍마다 (선택 모델 A) × (선택 모델 B) 5×5 교차표를 만들어 카이제곱 독립성 검정 + Cramér's V(효과크기) 계산.
+
+| 문항 쌍 | χ² | df | p | Cramér's V |
+|---|---:|---:|---:|---:|
+| Hair Realism × Structure Fidelity | 394.06 | 16 | < .001 | 0.386 |
+| Hair Realism × Color Fidelity | 407.03 | 16 | < .001 | 0.393 |
+| Structure Fidelity × Color Fidelity | 639.73 | 16 | < .001 | 0.492 |
+
+- 세 쌍 모두 p < .001로 통계적으로 유의한 연관성이 있음 — 3문항의 모델 선택은 서로 독립이 아님.
+- Cramér's V는 0.39~0.49(중간~중간강) 수준. 특히 **Structure Fidelity × Color Fidelity**가 가장 강하게 연관(0.492)됨 — 구조를 잘 따라간 모델을 색상도 잘 따라갔다고 평가하는 경향이 가장 뚜렷. Hair Realism은 나머지 두 문항과의 연관성이 상대적으로 약간 낮음(0.386/0.393) — Realism 판단에는 구조·색상 일치 여부 외에 "그냥 자연스러워 보이는가"라는 별도 기준이 어느 정도 작용하는 것으로 보임.
+
+### 3항목 동시 일치도 (Multi-way Consistency)
+
+- **완전 일치율**: 660개 응답 단위 중 3문항 모두 같은 모델을 고른 경우는 **289개(43.8%)**.
+  - 그중 Sketch-only로 3문항 모두 일치: 121회, Ours로 3문항 모두 일치: 111회, SHS: 26회, VividHair: 19회, HairCLIPv2: 12회.
+  - 즉 완전일치의 대부분(232/289 ≈ 80%)은 Sketch-only 아니면 Ours로 쏠림 — 베이스라인 3종은 "3문항 전부 압도적으로 이겼다"고 느껴지는 경우가 드묾.
+- **Fleiss' kappa**: 3문항을 3명의 "평가자"로 보고(각자 5개 모델 중 하나를 "판정"한다고 취급) 계산 시 **κ = 0.411** (P̄=0.579, Pₑ=0.285) — Landis & Koch 기준으로 "중간 수준의 일치(moderate agreement)".
+
+**해석**: 3문항이 완전히 독립적이지도, 완전히 동일하지도 않은 "중간 정도로 연관된" 관계. 응답자들이 순수하게 전반적 선호 하나로 3문항을 기계적으로 찍은 것은 아니지만(그랬다면 일치율·kappa가 훨씬 높았을 것), 구조 판단과 색상 판단은 서로 꽤 강하게 얽혀 있어 완전히 독립적인 3개 지표로 보기는 어려움 — 특히 Structure/Color 두 문항은 상당 부분 같은 시각적 단서(스케치 라인 재현도)에 의존해 판단됐을 가능성이 있음.
