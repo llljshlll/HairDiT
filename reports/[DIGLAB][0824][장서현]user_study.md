@@ -83,8 +83,8 @@ Color Fidelity는 Sketch-only(mcs3)가 1위
 ### 사용한 이미지 그리드 모음
 각 세트는 위쪽 sketch(입력) + 아래 A-E 5분할 결과 그리드로 구성. A-E와 실제 모델 매핑은 세트마다 랜덤이며, 아래 "정답 키"에 표시.
 
-#### 1. GT · braid · wavy_749
-- 정답 키: A=Ours, B=Sketch-only, C=VividHair, D=HairCLIPv2, E=SHS
+#### 1. GT · braid · braid_4156
+- 정답 키: A=Sketch-only, B=Ours, C=SHS, D=HairCLIPv2, E=VividHair
 - 집계 (35명):
 
 | Method | Hair Realism | Structure Fidelity | Color Fidelity |
@@ -266,7 +266,7 @@ Color Fidelity는 Sketch-only(mcs3)가 1위
 <img src="../outputs/0824/user_study/gt/grid/CM_1151.png" alt="13. GT - CM_1151 - unbraid" width="480">
 
 #### 14. COLOR · braid · braid_2548
-- 정답 키: A=VividHair, B=Ours, C=Sketch-only, D=HairCLIPv2, E=SHS
+- 정답 키: A=HairCLIPv2, B=SHS, C=Ours, D=VividHair, E=Sketch-only
 - 집계 (35명):
 
 | Method | Hair Realism | Structure Fidelity | Color Fidelity |
@@ -350,7 +350,7 @@ Color Fidelity는 Sketch-only(mcs3)가 1위
 <img src="../outputs/0824/user_study/color/grid/CM_1007.png" alt="19. COLOR - CM_1007 - unbraid" width="480">
 
 #### 20. GT · braid · braid_4276
-- 정답 키: A=Ours, B=HairCLIPv2, C=Sketch-only, D=VividHair, E=SHS
+- 정답 키: A=Ours, B=Sketch-only, C=SHS, D=HairCLIPv2, E=VividHair
 - 집계 (35명):
 
 | Method | Hair Realism | Structure Fidelity | Color Fidelity |
