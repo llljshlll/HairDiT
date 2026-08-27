@@ -1,8 +1,7 @@
 # mcs1 vs mcs2 정량평가 비교 (Gate OFF vs Gate ON)
 
 기존 정량평가 리포트([DIGLAB][0825][장서현]quant_eval_summary.md 의 Cross-identity mcs1-6 표,
-[DIGLAB][0817][장서현]eval.md 의 same-identity 4-seed mcs1-6 표, [DIGLAB][0815][장서현]run7_mcs_result.md 의
-gate on/off 해석·정성비교) 중 **mcs1·mcs2 두 설정만** 뽑아 정리.
+[DIGLAB][0817][장서현]eval.md 의 same-identity 4-seed mcs1-6 표 중 **mcs1·mcs2 두 설정만** 뽑아 정리.
 
 ## 두 설정 정의
 
@@ -95,51 +94,3 @@ mcs2 값은 `--recolor_from_gt` 적용 후 mcs1/3/5/6과 100% 동일 조건으�
 |---|---:|---:|---:|---:|---:|---:|
 | **mcs1** (Gate OFF) | 41.98±0.13 | 0.0015±0.0000 | 0.9710±0.0012 | 15.92±0.67 | **12.90±3.91** | **7.88±2.56** |
 | **mcs2** (Gate ON) | **42.49±0.11** | 0.0015±0.0001 | **0.9715±0.0007** | **13.64±0.28** | 13.28±3.89 | 8.66±2.51 |
-
----
-
-## 3. 해석 — 지표별로 갈리는 트레이드오프
-
-("[0815] run7_mcs_result.md §1. gate on/off" 원문 정리)
-
-- **Hair FID (cross-identity)**: mcs1 **129.68** < mcs2 138.23 → **gate OFF 우세**. 논문이 "Ours"로 정의한
-  gate-off 설정과 서열 방향 일치.
-- **KID_hair · Full-portrait FID (same-identity, 4-seed)**: **gate ON(mcs2) 우세** — KID braid 0.0015→**-0.0001**,
-  unbraid 0.0073→**0.0050**; Full-portrait FID braid 45.65→**41.23**, unbraid 15.92→**13.64**.
-  Hair FID(cross)와 결론이 반대 방향이다.
-- **Region IoU · Boundary IoU (4-seed)**: braid·unbraid 모두 **gate OFF(mcs1) 우세** — braid 0.1665/0.1162,
-  unbraid 0.1367/0.0950 (mcs2는 각각 더 낮음).
-- **ArcFace cos (identity, 4-seed)**: braid는 gate OFF가 근소 우세(0.9293 vs 0.9268, 단 braid는 얼굴 검출
-  유효 표본이 적어 참고용), unbraid는 오히려 gate ON이 근소 우세(0.9710 vs mcs2 0.9715) — 그룹별로 갈림.
-- **GT 방향오차 · Seed 불일치**: braid·unbraid 모두 **gate OFF(mcs1) 우세**(19.53/12.90 vs 21.19/14.96,
-  12.90/7.88 vs 13.28/8.66).
-
-→ "차이 없음"이 아니라 **지표(프로토콜)별로 갈리는 트레이드오프**다: Hair FID·구조 정합(Region/Boundary IoU)·
-방향 안정성은 **gate OFF(mcs1)** 우세, same-identity realism(KID·Full-portrait FID)은 **gate ON(mcs2)** 우세.
-정성적으로도 "gate off가 strand-crossing·knot boundary 표현이 더 좋다"는 관찰과 방향이 일치한다.
-
-## 4. 정성 비교 (gate on/off, GT/color 스케치)
-
-| | CM_1007(GT) | braid_4156(GT) | CM_1033(color) | CM_1068(color) | CM_1084(color) | braid_4276(color) |
-|---|---|---|---|---|---|---|
-| mcs1(Gate OFF) | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/gt/42/CM_1007.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/gt/42/braid_4156.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/CM_1033.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/CM_1068.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/CM_1084.png" width="120"> | <img src="../outputs/0815/run7_mcs1_phase2/epoch20/color/42/braid_4276.png" width="120"> |
-| mcs2(Gate ON) | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/CM_1007.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/gt/42/braid_4156.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1033.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1068.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/CM_1084.png" width="120"> | <img src="../outputs/0815/run7_mcs2_phase2/epoch20/color/42/braid_4276.png" width="120"> |
-
-논문 참고 figure: <img src="../outputs/0814/gate_on_off_paper_figure.png" width="500">
-
-- 논문(정성): ON이면 unbraid가 더 매끄럽고 스케치 색에 충실, OFF면 잔차가 강해 braid의
-  strand-crossing·knot boundary 표현이 좋음.
-- 실제(정성): ON이면 unbraid가 스케치 색에 충실하되 논문만큼 매끄러움 차이는 크지 않음, OFF면
-  strand-crossing·knot boundary 표현이 좋음 — 논문과 방향 일치.
-
----
-
-## 결론 / 참고
-
-- 논문이 정의하는 "Ours"는 **gate 없는 mcs1**이고, 현재 코드베이스·[0825] 정식 요약에서 "Ours"로 채택된
-  값은 **gate 있는 mcs2**다 — 이름과 정의가 다르다는 점에 주의.
-- gate on/off는 명확한 우열이 아니라 **cross-identity Hair FID·구조 정합·방향 안정성(gate OFF 우세)**
-  vs **same-identity realism, 즉 KID·Full-portrait FID(gate ON 우세)**의 트레이드오프다.
-- 출처: [DIGLAB][0825][장서현]quant_eval_summary.md (Cross-identity mcs1-6, 3-seed),
-  [DIGLAB][0817][장서현]eval.md (same-identity mcs1-6, 4-seed),
-  [DIGLAB][0815][장서현]run7_mcs_result.md (gate on/off 해석·정성비교)
