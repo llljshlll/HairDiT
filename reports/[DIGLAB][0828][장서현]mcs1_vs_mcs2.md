@@ -1,7 +1,8 @@
 # mcs1 vs mcs2 정량평가 비교 (Gate OFF vs Gate ON)
 
 기존 정량평가 리포트([DIGLAB][0825][장서현]quant_eval_summary.md 의 Cross-identity mcs1-6 표,
-[DIGLAB][0815][장서현]run7_mcs_result.md 의 same-identity mcs1-6 표·해석) 중 **mcs1·mcs2 두 설정만** 뽑아 정리.
+[DIGLAB][0817][장서현]eval.md 의 same-identity 4-seed mcs1-6 표, [DIGLAB][0815][장서현]run7_mcs_result.md 의
+gate on/off 해석·정성비교) 중 **mcs1·mcs2 두 설정만** 뽑아 정리.
 
 ## 두 설정 정의
 
@@ -48,52 +49,52 @@ Pixel Blend/Feathering OFF(0), 헤어 마스크(matte) 내부에서만 평가.
 
 ---
 
-## 2. Same-identity (single-seed, epoch20)
+## 2. Same-identity (4-seed: seed 1, 2, 3, 42)
 
-출처: [0815] run7_mcs_result.md, `CRG 1.5 + BLD full(step 20) + Pixel Matte-Blend + Feathering OFF(0), epoch20`.
-**4-seed 평균이 아닌 단일 시드(epoch20) 값**이다 — [0825] 정식 5-모델 표에서는 mcs2만 4-seed로 재평가되어
-(Sketch LPIPS 0.4684±0.0011 등) 아래 값과 근소하게 다르지만 seed 분산 범위 안이다. mcs1은 same-identity
-4-seed 재평가가 없으므로 이 단일시드 값이 유일한 비교 자료다.
+출처: [DIGLAB][0817][장서현]eval.md 의 "4-seed" 표, `CRG 1.5 + BLD full(step 20) + Pixel Matte-Blend + Feathering OFF(0), epoch20`.
+mcs2 값은 `--recolor_from_gt` 적용 후 mcs1/3/5/6과 100% 동일 조건으로 재생성·재평가된 값이며, [0825] 정식 5-모델
+표의 "Ours(Gated)" 값과 완전히 일치한다. (참고: [0815] run7_mcs_result.md의 same-identity 표는 이 4-seed가 아니라
+[0817]의 "단일시드"(seed 42) 서브섹션과 동일한 값이다.)
 
-### braid (n=107)
-
-#### 구조·색상·화질·리얼리즘
-| 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | LPIPS(GT) ↓ | ΔE2000(GT) ↓ | PSNR ↑ | Hair FID ↓ | KID_hair ↓ |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 0.4843 | 13.8734 | **0.0961** | 0.1319 | 3.1991 | 16.3227 | 78.2520 | 0.0019±0.0005 |
-| **mcs2** (Gate ON) | **0.4668** | **12.8527** | 0.0952 | **0.1141** | **2.0913** | **16.6502** | **69.7901** | **0.0002±0.0004** |
-
-#### 경계밴드 B
-| 모델 | Boundary LPIPS ↓(legacy) | Bnd LPIPS k=8 ↓ | Bnd LPIPS k=16 ↓ | Boundary FID ↓ | Region IoU ↑ | Boundary IoU ↑ |
-|---|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 0.0063 | 0.0084 | 0.0273 | 4.2583 | **0.1629** | **0.1159** |
-| **mcs2** (Gate ON) | **0.0057** | **0.0076** | **0.0245** | **3.8197** | 0.1433 | 0.1011 |
-
-#### 배경 보존 · identity · 방향 안정성
-| 모델 | PSNR_bg ↑ | LPIPS_bg ↓ | ArcFace cos ↑ | Full-portrait FID ↓ | GT 방향오차 ↓ | Seed 불일치 ↓ |
-|---|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 47.4563 | 0.0004 | **0.9572** | 45.1613 | **19.53±4.55** | **12.92±3.07** |
-| **mcs2** (Gate ON) | **47.8856** | **0.0003** | 0.9194 | **40.6367** | 21.19±4.71 | 14.96±3.15 |
-
-### unbraid (n=466)
+### braid (n=107, 4-seed)
 
 #### 구조·색상·화질·리얼리즘
 | 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | LPIPS(GT) ↓ | ΔE2000(GT) ↓ | PSNR ↑ | Hair FID ↓ | KID_hair ↓ |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 0.7000 | 13.1133 | **0.0485** | 0.1852 | 2.4115 | 16.7622 | 38.5344 | 0.0083±0.0028 |
-| **mcs2** (Gate ON) | **0.6755** | **12.3779** | 0.0468 | **0.1726** | **1.5365** | **17.2934** | **34.2327** | **0.0051±0.0023** |
+| **mcs1** (Gate OFF) | 0.4870±0.0020 | 14.05±0.42 | **0.0961±0.0001** | 0.1332±0.0040 | 3.26±0.17 | 16.29±0.09 | 76.79±1.54 | 0.0015±0.0006 |
+| **mcs2** (Gate ON) | **0.4684±0.0011** | **12.99±0.29** | 0.0951±0.0004 | **0.1153±0.0017** | **2.17±0.09** | **16.58±0.07** | **70.00±1.33** | **-0.0001±0.0002** |
 
 #### 경계밴드 B
 | 모델 | Boundary LPIPS ↓(legacy) | Bnd LPIPS k=8 ↓ | Bnd LPIPS k=16 ↓ | Boundary FID ↓ | Region IoU ↑ | Boundary IoU ↑ |
 |---|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 0.0074 | 0.0033 | 0.0212 | 2.8750 | **0.1402** | **0.0978** |
-| **mcs2** (Gate ON) | **0.0066** | **0.0029** | **0.0190** | **2.5609** | 0.1199 | 0.0815 |
+| **mcs1** (Gate OFF) | 0.0063±0.0001 | 0.0083±0.0002 | 0.0276±0.0003 | 4.18±0.17 | **0.1665±0.0047** | **0.1162±0.0016** |
+| **mcs2** (Gate ON) | **0.0057±0.0001** | **0.0076±0.0000** | **0.0247±0.0002** | **3.74±0.13** | 0.1460±0.0021 | 0.1019±0.0008 |
 
 #### 배경 보존 · identity · 방향 안정성
 | 모델 | PSNR_bg ↑ | LPIPS_bg ↓ | ArcFace cos ↑ | Full-portrait FID ↓ | GT 방향오차 ↓ | Seed 불일치 ↓ |
 |---|---:|---:|---:|---:|---:|---:|
-| **mcs1** (Gate OFF) | 41.8648 | 0.0015 | 0.9698 | 16.1854 | **12.90±3.91** | **7.88±2.56** |
-| **mcs2** (Gate ON) | **42.3961** | 0.0015 | **0.9718** | **13.5973** | 13.28±3.89 | 8.66±2.51 |
+| **mcs1** (Gate OFF) | 47.48±0.07 | 0.0004±0.0000 | **0.9293±0.0199** | 45.65±0.62 | **19.53±4.55** | **12.92±3.07** |
+| **mcs2** (Gate ON) | **47.89±0.04** | **0.0003±0.0000** | 0.9268±0.0149 | **41.23±0.88** | 21.19±4.71 | 14.96±3.15 |
+
+### unbraid (n=466, 4-seed)
+
+#### 구조·색상·화질·리얼리즘
+| 모델 | Sketch LPIPS ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ | LPIPS(GT) ↓ | ΔE2000(GT) ↓ | PSNR ↑ | Hair FID ↓ | KID_hair ↓ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **mcs1** (Gate OFF) | 0.6929±0.0091 | 13.18±0.12 | **0.0480±0.0006** | 0.1832±0.0026 | 2.33±0.14 | 16.89±0.18 | 37.01±1.34 | 0.0073±0.0011 |
+| **mcs2** (Gate ON) | **0.6687±0.0091** | **12.46±0.13** | 0.0460±0.0009 | **0.1728±0.0012** | **1.52±0.03** | **17.37±0.09** | **34.12±0.71** | **0.0050±0.0006** |
+
+#### 경계밴드 B
+| 모델 | Boundary LPIPS ↓(legacy) | Bnd LPIPS k=8 ↓ | Bnd LPIPS k=16 ↓ | Boundary FID ↓ | Region IoU ↑ | Boundary IoU ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| **mcs1** (Gate OFF) | 0.0073±0.0002 | 0.0033±0.0000 | 0.0209±0.0004 | 2.86±0.04 | **0.1367±0.0064** | **0.0950±0.0045** |
+| **mcs2** (Gate ON) | **0.0065±0.0001** | **0.0029±0.0001** | **0.0189±0.0001** | **2.58±0.01** | 0.1172±0.0028 | 0.0794±0.0028 |
+
+#### 배경 보존 · identity · 방향 안정성
+| 모델 | PSNR_bg ↑ | LPIPS_bg ↓ | ArcFace cos ↑ | Full-portrait FID ↓ | GT 방향오차 ↓ | Seed 불일치 ↓ |
+|---|---:|---:|---:|---:|---:|---:|
+| **mcs1** (Gate OFF) | 41.98±0.13 | 0.0015±0.0000 | 0.9710±0.0012 | 15.92±0.67 | **12.90±3.91** | **7.88±2.56** |
+| **mcs2** (Gate ON) | **42.49±0.11** | 0.0015±0.0001 | **0.9715±0.0007** | **13.64±0.28** | 13.28±3.89 | 8.66±2.51 |
 
 ---
 
@@ -103,13 +104,13 @@ Pixel Blend/Feathering OFF(0), 헤어 마스크(matte) 내부에서만 평가.
 
 - **Hair FID (cross-identity)**: mcs1 **129.68** < mcs2 138.23 → **gate OFF 우세**. 논문이 "Ours"로 정의한
   gate-off 설정과 서열 방향 일치.
-- **KID_hair · Full-portrait FID (same-identity)**: **gate ON(mcs2) 우세** — KID braid 0.0019→**0.0002**,
-  unbraid 0.0083→**0.0051**; Full-portrait FID braid 45.16→**40.64**, unbraid 16.19→**13.60**.
+- **KID_hair · Full-portrait FID (same-identity, 4-seed)**: **gate ON(mcs2) 우세** — KID braid 0.0015→**-0.0001**,
+  unbraid 0.0073→**0.0050**; Full-portrait FID braid 45.65→**41.23**, unbraid 15.92→**13.64**.
   Hair FID(cross)와 결론이 반대 방향이다.
-- **Region IoU · Boundary IoU**: braid·unbraid 모두 **gate OFF(mcs1) 우세** — braid 0.1629/0.1159,
-  unbraid 0.1402/0.0978 (mcs2는 각각 더 낮음).
-- **ArcFace cos (identity)**: braid는 gate OFF가 최고(0.9572, 단 braid는 얼굴 검출 유효 표본이 적어 참고용),
-  unbraid는 오히려 gate OFF가 더 낮음(0.9698 vs mcs2 0.9718) — 그룹별로 갈림.
+- **Region IoU · Boundary IoU (4-seed)**: braid·unbraid 모두 **gate OFF(mcs1) 우세** — braid 0.1665/0.1162,
+  unbraid 0.1367/0.0950 (mcs2는 각각 더 낮음).
+- **ArcFace cos (identity, 4-seed)**: braid는 gate OFF가 근소 우세(0.9293 vs 0.9268, 단 braid는 얼굴 검출
+  유효 표본이 적어 참고용), unbraid는 오히려 gate ON이 근소 우세(0.9710 vs mcs2 0.9715) — 그룹별로 갈림.
 - **GT 방향오차 · Seed 불일치**: braid·unbraid 모두 **gate OFF(mcs1) 우세**(19.53/12.90 vs 21.19/14.96,
   12.90/7.88 vs 13.28/8.66).
 
@@ -140,4 +141,5 @@ Pixel Blend/Feathering OFF(0), 헤어 마스크(matte) 내부에서만 평가.
 - gate on/off는 명확한 우열이 아니라 **cross-identity Hair FID·구조 정합·방향 안정성(gate OFF 우세)**
   vs **same-identity realism, 즉 KID·Full-portrait FID(gate ON 우세)**의 트레이드오프다.
 - 출처: [DIGLAB][0825][장서현]quant_eval_summary.md (Cross-identity mcs1-6, 3-seed),
-  [DIGLAB][0815][장서현]run7_mcs_result.md (same-identity mcs1-6 단일시드, gate on/off 해석·정성비교)
+  [DIGLAB][0817][장서현]eval.md (same-identity mcs1-6, 4-seed),
+  [DIGLAB][0815][장서현]run7_mcs_result.md (gate on/off 해석·정성비교)
