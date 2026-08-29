@@ -1,6 +1,6 @@
 # mcs1 vs mcs2 정량평가 비교 (Gate OFF vs Gate ON)
 
-기존 정량평가 리포트([DIGLAB][0825][장서현]quant_eval_summary.md 의 Cross-identity mcs1-6 표,
+기존 정량평가 리포트[DIGLAB][0825][장서현]quant_eval_summary.md 의 Cross-identity mcs1-6 표,
 [DIGLAB][0817][장서현]eval.md 의 same-identity 4-seed mcs1-6 표 중 **mcs1·mcs2 두 설정만** 뽑아 정리.
 
 ## 두 설정 정의
@@ -94,3 +94,13 @@ mcs2 값은 `--recolor_from_gt` 적용 후 mcs1/3/5/6과 100% 동일 조건으�
 |---|---:|---:|---:|---:|---:|---:|
 | **mcs1** (Gate OFF) | 41.98±0.13 | 0.0015±0.0000 | 0.9710±0.0012 | 15.92±0.67 | **12.90±3.91** | **7.88±2.56** |
 | **mcs2** (Gate ON) | **42.49±0.11** | 0.0015±0.0001 | **0.9715±0.0007** | **13.64±0.28** | 13.28±3.89 | 8.66±2.51 |
+
+### Hair FID / KID_hair (통합 573장, unpaired)
+seed 1/2/3/42 평균 ± population std.
+
+| 모델 | Hair FID ↓ | KID_hair ↓ |
+|---|:---:|:---:|
+| **mcs2** (Gate ON) | **33.57±0.40** | **0.0029±0.0004** |
+| **mcs1** (Gate OFF) | 36.53±1.05 | 0.0048±0.0006 |
+
+
