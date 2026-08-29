@@ -1,4 +1,5 @@
-# 정량평가 체크 — Hair KID/FID · Sketch ΔE2000 · Edge IoU · ArcFace · ΔE2000(GT) · Boundary LPIPS
+# 정량평가 체크
+: Hair KID/FID · Sketch ΔE2000 · Edge IoU · ArcFace · ΔE2000(GT) · Boundary LPIPS  
 
 Same-identity(동일 얼굴) vs Cross-identity(배경 인물 교체), baseline vs mcs2 / mcs1 vs mcs2 비교.
 
@@ -28,8 +29,8 @@ braid 단독은 n=107 < 2048이라 공분산 추정이 rank-deficient가 됨 따
 | VividHairStyler | 0.0088±0.0001 | 0.0559 | 13.48 | 0.0514 | 0.5966 |
 | **mcs2 (Ours)** | 0.0029±0.0004 | 0.0920±0.0010 | **11.44±0.27** | 0.0687±0.0002 | N/A |
 
-* Hair KID(cross)의 mcs2는 실제는 mcs1의 값
-
+- Hair KID(cross)의 mcs2는 실제는 mcs1의 값  
+- baseline모델에서 same-identity는 4seed로 계산, cross-identity는 단일시드(seed3)에 대해 계산
 
 ## 2. mcs1 vs mcs2 (Gate OFF vs Gate ON)
 
