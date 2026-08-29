@@ -4,7 +4,7 @@
 Same-identity(동일 얼굴) vs Cross-identity(배경 인물 교체), baseline vs mcs2 / mcs1 vs mcs2 비교.
 
 ## 방식
-**모든 값은 "시드별로 braid·unbraid를 하나의 값으로 통합 → 그 시드별 값들의 mean ± population std"**
+**모든 값은 4seed 기준으로, "시드별로 braid·unbraid를 하나의 값으로 통합 → 그 시드별 값들의 mean ± population std"**
 로 계산했다. ±는 전부 시드 간 재현성(seed-to-seed)이며, 통합 방식만 지표 종류에 따라 다르다.
 
 | 지표 | 시드별 통합 방식 | braid : unbraid 가중치 |
@@ -15,7 +15,7 @@ Same-identity(동일 얼굴) vs Cross-identity(배경 인물 교체), baseline v
 - ⚠️ **FID/KID만 pooled인 이유**: FID는 2048-dim Inception feature의 평균·공분산으로 정의되는데
 braid 단독은 n=107 < 2048이라 공분산 추정이 rank-deficient가 됨 따라서 FID/KID는 동일 가중치(50:50)를 포기하고 통계적으로 안정적인 pooled를 쓴다 — 실측으로도 macro 방식은 pooled 대비 값이 40~90 높게 튀고 모델 간 순위까지 뒤바뀐다.
 
-- ⚠️ **cross 열의 mcs2는 baseline과 완전히 공정한 비교가 아니다** — mcs2 값은 B(배경) 매핑과 시드 수가 baseline 4종(v2 protocol, 단일시드 3)과 다르다.
+- ⚠️ **cross 열의 mcs2는 baseline과 완전히 공정한 비교가 아니다** — mcs2 값은 B(배경) 매핑이 baseline 4종(v2 protocol)과 다르다.
 
 
 ---
@@ -30,18 +30,17 @@ braid 단독은 n=107 < 2048이라 공분산 추정이 rank-deficient가 됨 따
 | **mcs2 (Ours)** | 0.0029±0.0004 | 0.0920±0.0010 | **11.44±0.27** | 0.0687±0.0002 | N/A |
 
 - Hair KID(cross)의 mcs2는 실제는 mcs1의 값  
-- baseline모델에서 same-identity는 4seed로 계산, cross-identity는 단일시드(seed3)에 대해 계산
 
 ## 2. mcs1 vs mcs2 (Gate OFF vs Gate ON)
 
-### same-identity (4-seed)
+### same-identity
 
 | 모델 | Hair FID ↓ | KID_hair ↓ | ΔE2000(GT) ↓ | Boundary LPIPS(k=16) ↓ |
 |---|:---:|:---:|:---:|:---:|
 | mcs1 (Gate OFF) | 36.53±1.05 | 0.0048±0.0006 | 2.80±0.12 | 0.0276±0.0003 |
 | **mcs2 (Gate ON)** | **33.57±0.40** | **0.0029±0.0004** | **1.84±0.03** | **0.0247±0.0002** |
 
-### cross-identity (3-seed)
+### cross-identity
 
 | 모델 | Hair FID ↓ | KID_hair ↓ | Sketch ΔE2000 ↓ | Edge IoU ↑ |
 |---|:---:|:---:|:---:|:---:|
