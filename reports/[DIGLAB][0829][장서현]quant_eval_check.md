@@ -12,11 +12,11 @@ Same-identity(동일 얼굴) vs Cross-identity(배경 인물 교체), baseline v
 | Sketch ΔE2000 · Edge IoU · ArcFace · ΔE2000(GT) · Boundary LPIPS | **macro = (braid + unbraid)/2** | 50 : 50 (동일 가중치) |
 | **Hair FID · KID_hair** | **통합573 pooled** — 573장을 한 풀에 넣어 1회 계산 | 107 : 466 (18.7 : 81.3) |
 
-⚠️ **FID/KID만 pooled인 이유**: FID는 2048-dim Inception feature의 평균·공분산으로 정의되는데
+- ⚠️ **FID/KID만 pooled인 이유**: FID는 2048-dim Inception feature의 평균·공분산으로 정의되는데
 braid 단독은 n=107 < 2048이라 공분산 추정이 rank-deficient가 됨 따라서 FID/KID는 동일 가중치(50:50)를 포기하고 통계적으로 안정적인 pooled를 쓴다 — 실측으로도 macro 방식은 pooled 대비 값이 40~90 높게 튀고 모델 간 순위까지 뒤바뀐다.
 
 - ⚠️ **cross 열의 mcs2는 baseline과 완전히 공정한 비교가 아니다** — mcs2 값은 B(배경) 매핑과 시드 수가 baseline 4종(v2 protocol, 단일시드 3)과 다르다.
-- **ArcFace(cross)**: 기준은 B 이미지(배경 인물). mcs2는 0817 cross-identity 표에 ArcFace가 없어 N/A.
+
 
 ---
 
